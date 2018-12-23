@@ -1,0 +1,386 @@
+package action;
+
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+
+import org.apache.commons.math3.fitting.PolynomialCurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoints;
+import org.jfree.ui.RefineryUtilities;
+
+import charts.StockChart;
+import entity.HistoricalDataEx;
+import entity.Opportunity;
+import entity.Sentiment;
+import entity.Stock;
+import entity.TradeType;
+import uitls.CandleComparator;
+import uitls.DAO;
+import uitls.Util;
+
+public class CandleTrendWorker implements Runnable{
+	private Stock stock;
+	private DAO dao = null;
+	private Util util = null;
+	
+	public CandleTrendWorker(Stock stock) throws Exception {
+		this.stock = stock;
+		this.util = new Util();
+	}
+	
+	public void run() {
+		String message = Thread.currentThread().getName() + " Start. Command = " + stock;
+		//System.out.println("\n");
+		Util.Logger.log(0, message);
+		processCommand();
+		//System.out.println(Thread.currentThread().getName() + " End.");
+		Util.Logger.log(0,Thread.currentThread().getName() + " End.");
+	}
+
+	private boolean checkBuyingOpportunity(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1,
+			HistoricalDataEx lastCandle) {
+
+		BuyOpportunityChecker checker = new BuyOpportunityChecker(lastMinus2, lastMinus1, lastCandle);
+		
+		return  checker.checkAllRules();
+		
+	}
+	
+	private boolean checkSellingOpportunity(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1,
+			HistoricalDataEx lastCandle) {
+		
+		SellOpportunityChecker checker = new SellOpportunityChecker(lastMinus2, lastMinus1, lastCandle);
+		
+		return checker.checkAllRules();
+	}
+
+	private Opportunity checkForOpportunity(List<HistoricalDataEx> historicalData) {
+		ArrayList<HistoricalDataEx> last3Candles = new ArrayList<HistoricalDataEx>(); 
+		
+		Opportunity opty = null;
+		
+		int size = historicalData.size();
+		if(size >= 3)
+		{
+			for(int i = size-3; i < size; i++)
+			{
+				last3Candles.add(historicalData.get(i));
+			}
+		}
+		historicalData = null;
+		
+		
+		HistoricalDataEx lastMinus2 = last3Candles.get(0);
+		HistoricalDataEx lastMinus1 = last3Candles.get(1);
+		HistoricalDataEx lastCandle = last3Candles.get(2);
+		
+		if(stock.SYMBOL.equals("ITC") && lastCandle.timeStamp.contains("13:50"))
+		{
+			System.out.print("-");
+		}
+		
+		if(Util.sentiment==Sentiment.BULLISH)
+		{
+			boolean is_buy = checkBuyingOpportunity(lastMinus2,lastMinus1,lastCandle);
+			
+			if(is_buy)
+			{
+				opty = new Opportunity();
+				opty.MKT = stock.MKT;
+				opty.Symbol = stock.SYMBOL;
+				opty.TradeType = TradeType.BUY;
+				opty.EntryPrice = lastCandle.close;
+				opty.ExitPrice = opty.EntryPrice*(1.005);
+				opty.StopLoss = opty.EntryPrice*(1.03); 
+				opty.TimeStamp = lastCandle.timeStamp;
+			}
+		}
+		else if(Util.sentiment==Sentiment.BEARISH)
+		{
+			boolean is_sell = checkSellingOpportunity(lastMinus2,lastMinus1,lastCandle);
+			
+			if(is_sell)
+			{
+				opty = new Opportunity();
+				opty.MKT = stock.MKT;
+				opty.Symbol = stock.SYMBOL;
+				opty.TradeType = TradeType.SELL;
+				opty.EntryPrice = lastCandle.close;
+				opty.ExitPrice = opty.EntryPrice*(1 - 0.005);
+				opty.StopLoss = opty.EntryPrice*(1- 0.03); 
+				opty.TimeStamp = lastCandle.timeStamp;
+			}
+		}
+		return opty;
+	}
+	
+	private void processCommand() {
+		try {
+			dao = new DAO();
+			//System.out.println("");
+			ArrayList<HistoricalDataEx> historicalData = dao.getHistoricalData(stock);
+			
+			if(historicalData.size() < 11)
+			{
+				throw new Exception("Not enough data to plot trend");
+			}
+			Collections.sort(historicalData, new CandleComparator());
+			//dao.insertToCandleTable(stock,historicalData.dataArrayList);
+			
+			calculateMovingAvg(historicalData,12);
+			calculateMomentum(historicalData,14);
+			calculatePVT(historicalData,1);
+			calculateEMA12(historicalData);
+			calculateEMA26(historicalData);
+			calculateMACD(historicalData);
+			calculateSignalLine(historicalData);
+			
+			/*
+			 * 
+			plotChart(new String[] {"MovingAvg","close"},historicalData);
+			plotChart(new String[] {"MoM","Dummy"},historicalData);
+			plotChart(new String[] {"MACD","Signal"},historicalData);
+			plotChart(new String[] {"PVT","PVT"},historicalData);
+			 
+			System.out.println("Time,"+"Close,"+"MovingAvg,"+"MOM,"+"MACD,"+"Signal,"+"PVT");
+			for(int i = 40 ; i < historicalData.size() ; i++)
+			{
+				HistoricalDataEx candle = historicalData.get(i);
+				System.out.println(candle.timeStamp+","+candle.close+","+candle.MovingAvg+","+candle.MoM+","+candle.MACD+","+candle.Signal+","+candle.PVT);
+			}
+			
+			System.out.println("");
+			*/
+			
+			int start = historicalData.size()-3;
+			int end = historicalData.size();
+			
+			List<HistoricalDataEx> subList =  historicalData.subList(start, end);
+			
+			Opportunity opty = checkForOpportunity(subList);
+			if(opty!=null)
+			{
+				boolean is_valid = validate(historicalData,opty);
+				if(is_valid)
+				{
+					System.out.println("Valid: "+opty);
+					storeOpportunity(opty);
+				}
+				else
+				{
+					System.out.println("InValid: "+opty);
+				}
+				
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			Util.Logger.log(1,e.getMessage());
+		}
+	}
+	
+	private boolean validate(ArrayList<HistoricalDataEx> historicalData, Opportunity opty) {
+		Hashtable<Integer,Double> points = new Hashtable<Integer,Double>();
+		int i = 0 ;
+		
+		for (HistoricalDataEx candle : historicalData) 
+		{
+			try {
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				java.util.Date recoTime = simpleDateFormat.parse(candle.timeStamp);
+				LocalDateTime localDateTime = recoTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+				
+				String today = util.getTodayYYMMDD();
+				LocalDateTime startTime = LocalDateTime.parse(today + "T09:15:00");
+				
+				LocalDateTime endTime = LocalDateTime.parse(today + "T14:30:00");
+				
+				if(localDateTime.isAfter(startTime) && localDateTime.isBefore(endTime))
+				{
+					points.put(i, candle.close);
+					i++;
+				}
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		if(i < 8)
+		{
+			return false;
+		}
+		double slope = getSlope(points);
+		opty.Slope=slope;
+		
+		if(slope > 0 && opty.TradeType==TradeType.BUY)
+		{
+			return true;
+		}
+		if(slope < 0 && opty.TradeType==TradeType.SELL)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	private double getSlope(Hashtable<Integer,Double> points)
+	{
+	    WeightedObservedPoints obs=new WeightedObservedPoints();
+	    Enumeration e=points.keys();
+	    int key;
+	    while (e.hasMoreElements())
+	    {
+	        key=(int)e.nextElement();
+	        obs.add(key,points.get(key));
+	    }
+	    PolynomialCurveFitter fitter=PolynomialCurveFitter.create(1);
+	    double[] coeff=fitter.fit(obs.toList());
+
+	    BigDecimal bd = new BigDecimal(coeff[1]);
+	    BigDecimal slope=bd.setScale(3,BigDecimal.ROUND_HALF_UP);
+	    return slope.doubleValue()*10;
+	}
+	
+	private void storeOpportunity(Opportunity opty) 
+	{		
+		try {
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				java.util.Date recoTime = simpleDateFormat.parse(opty.TimeStamp);
+				LocalDateTime localDateTime = recoTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+				
+				dao.insertToRecomendation(stock.MKT, stock.SYMBOL, localDateTime, opty.TradeType, opty.EntryPrice, opty.ExitPrice);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}		
+	}
+
+	private void plotChart(String[] columns, ArrayList<HistoricalDataEx> historicalData) 
+	{
+		try {
+			StockChart chart = new StockChart(columns[0] +" and "+columns[1], historicalData , columns);
+			chart.pack();
+			RefineryUtilities.centerFrameOnScreen(chart);
+			chart.setVisible(true);
+			//chart.setDropTarget(dt);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void calculateSignalLine(ArrayList<HistoricalDataEx> historicalData) 
+	{
+		double multiplier = 2.0 / (9.0 + 1.0) ;// = (2 / (10 + 1) ) = 0.1818 (18.18%)
+		for(int i = 35 ; i < historicalData.size() ; i++)
+		{
+			HistoricalDataEx prev = historicalData.get(i-9);
+			HistoricalDataEx curr = historicalData.get(i);
+			
+			double Signal = (curr.MACD - prev.MACD) * multiplier + prev.MACD; 
+			
+			historicalData.get(i).Signal=Signal;
+		}
+	}
+
+	private void calculateMACD(ArrayList<HistoricalDataEx> historicalData) 
+	{
+		for(int i = 26 ; i < historicalData.size() ; i++)
+		{
+			HistoricalDataEx candle = historicalData.get(i);
+			
+			double MACD = candle.EMA12-candle.EMA26; 
+			
+			historicalData.get(i).MACD=MACD;
+		}
+	}
+
+	private void calculateEMA26(ArrayList<HistoricalDataEx> historicalData) 
+	{
+		double multiplier = 2.0 / (26.0 + 1.0) ;// = (2 / (10 + 1) ) = 0.1818 (18.18%)
+		for(int i = 26 ; i < historicalData.size() ; i++)
+		{
+			HistoricalDataEx prev = historicalData.get(i-1);
+			HistoricalDataEx curr = historicalData.get(i);
+			
+			double prevEMA = prev.EMA26;
+			if(prevEMA==0.0)
+			{
+				prevEMA = prev.MovingAvg;
+			}
+			
+			double EMA = (curr.close - prevEMA) * multiplier + prevEMA; 
+			
+			historicalData.get(i).EMA26=EMA;
+		}
+	}
+	
+	private void calculateEMA12(ArrayList<HistoricalDataEx> historicalData) 
+	{
+		double multiplier = 2.0 / (12.0 + 1.0) ;// = (2 / (10 + 1) ) = 0.1818 (18.18%)
+		for(int i = 12 ; i < historicalData.size() ; i++)
+		{
+			HistoricalDataEx prev = historicalData.get(i-1);
+			HistoricalDataEx curr = historicalData.get(i);
+			
+			double prevEMA = prev.EMA12;
+			if(prevEMA==0.0)
+			{
+				prevEMA = prev.MovingAvg;
+			}
+			
+			double EMA = (curr.close - prevEMA) * multiplier + prevEMA; 
+			
+			historicalData.get(i).EMA12=EMA;
+		}
+	}
+
+	private void calculatePVT(ArrayList<HistoricalDataEx> historicalData, int candle) {
+		for(int i = 33 ; i < historicalData.size() ; i++)
+		{
+			HistoricalDataEx prev = historicalData.get(i-1);
+			HistoricalDataEx curr = historicalData.get(i);
+			
+			double PVT = (((curr.close - prev.close) / prev.close) * curr.volume) + prev.PVT;
+			historicalData.get(i).PVT=PVT;
+		}
+	}
+
+	private void calculateMomentum(ArrayList<HistoricalDataEx> historicalData, int candle) 
+	{
+		//candle=candle-1;
+		for(int i = candle ; i < historicalData.size() ; i++)
+		{
+			HistoricalDataEx prev = historicalData.get(i-candle);
+			HistoricalDataEx curr = historicalData.get(i);
+			
+			double mom = curr.close-prev.close;
+			historicalData.get(i).MoM=mom;
+		}
+	}
+
+	private void calculateMovingAvg(ArrayList<HistoricalDataEx> historicalData, int candle) 
+	{
+		for(int i = candle ; i < historicalData.size() ; i++)
+		{
+			double sum = 0;
+			for(int j = i-candle; j < i; j++)
+			{
+				HistoricalDataEx c = historicalData.get(j);
+				sum+=c.close;
+			}
+			double ma = sum/(candle);
+			historicalData.get(i).MovingAvg=ma;
+			//System.out.println("Close="+historicalData.get(i).close+"----MA="+historicalData.get(i).MovingAvg);
+		}
+	}
+}

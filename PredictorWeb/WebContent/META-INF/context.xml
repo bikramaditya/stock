@@ -1,0 +1,8 @@
+<Context>
+	
+	<ResourceLink name="jdbc/stock"
+	global="jdbc/stock"
+	type="javax.sql.DataSource"
+	/>
+	
+</Context>
