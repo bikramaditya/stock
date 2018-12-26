@@ -15,7 +15,7 @@ public class SellOpportunityChecker {
 		this.lastMinus1 = lastMinus1; 
 		this.lastCandle = lastCandle;
 	}
-	public RulesValidation checkAllRules(float nifty)
+	public RulesValidation checkAllRules(float upDown)
 	{
 		boolean is_valid = false;
 		
@@ -25,28 +25,28 @@ public class SellOpportunityChecker {
 		double is_MACD_GoAhead = is_MACD_GoAhead(lastMinus2, lastMinus1,lastCandle);
 		double is_PVT_GoAhead = is_PVT_GoAhead(lastMinus2, lastMinus1,lastCandle);
 		
-		if(nifty < 0)
+		if(upDown < 0)
 		{
-			if(is_MOM_GoAhead <= -15 && is_MACD_GoAhead < -5 && is_PVT_GoAhead <= -2 && is_HA_GoAhead < 0)
+			if(is_MOM_GoAhead <= -3 && is_MACD_GoAhead < -1 && is_PVT_GoAhead <= -0.5 && is_HA_GoAhead < 0)
 			{
 				is_valid = true;
 			}			
 		}
 		else
 		{
-			if(is_MOM_GoAhead <= -25 && is_MACD_GoAhead < -10 && is_PVT_GoAhead <= -5 && is_HA_GoAhead < 0)
+			if(is_MOM_GoAhead <= -5 && is_MACD_GoAhead < -2 && is_PVT_GoAhead <= -0.5 && is_HA_GoAhead < 0)
 			{
 				is_valid = true;
 			}
 		}
 		
 		RulesValidation rv = new RulesValidation();
-		//rv.is_MA_GoAhead=is_MA_GoAhead;
+
 		rv.is_MOM_GoAhead = is_MOM_GoAhead;
 		rv.is_MACD_GoAhead = is_MACD_GoAhead;
 		rv.is_PVT_GoAhead = is_PVT_GoAhead;
 		rv.is_valid = is_valid;
-		
+		rv.Score = Math.abs(is_MOM_GoAhead + is_MACD_GoAhead + is_PVT_GoAhead  + is_HA_GoAhead);
 		return rv;
 	}
 	private double is_PVT_GoAhead(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) {

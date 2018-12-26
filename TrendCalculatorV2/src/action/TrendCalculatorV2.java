@@ -49,17 +49,18 @@ public class TrendCalculatorV2 {
 			
 			if(watchList.size() > 0)
 			{
-				float nifty = util.getNifty();
+				//float nifty = util.getNifty();
 				
-				if(nifty!=0)
+				//if(nifty!=0)
 				{
 					ExecutorService executor = Executors.newFixedThreadPool(2);
 					
 					for (Stock stock : watchList) {
 						Runnable worker;
 						try {
-							worker = new CandleTrendWorker(stock,kite,nifty);
+							worker = new CandleTrendWorker(stock,kite);
 				            executor.execute(worker);
+				            Thread.sleep(300);
 						} catch (Exception e) {
 							e.printStackTrace();
 							Util.Logger.log(1, e.getMessage());

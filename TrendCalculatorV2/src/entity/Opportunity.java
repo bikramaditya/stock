@@ -14,12 +14,12 @@ public class Opportunity {
 	public double MACD;
 	public double PVT;
 	public boolean is_valid;
+	public double Score;
 	@Override
 	public String toString() {
 		return "Opportunity [MKT=" + MKT + ", Symbol=" + Symbol + ", TradeType=" + TradeType + ", EntryPrice="
 				+ EntryPrice + ", ExitPrice=" + ExitPrice + ", StopLoss=" + StopLoss + ", TimeStamp=" + TimeStamp
 				+ ", Slope=" + Slope + ", MA=" + MA + ", MOM=" + MOM + ", MACD=" + MACD + ", PVT=" + PVT + ", is_valid="
-				+ is_valid + "]";
+				+ is_valid + ", Score=" + Score + "]";
 	}
-		
 }

@@ -35,19 +35,25 @@ public class CandleTrendWorker implements Runnable{
 	private Util util = null;
 	private Kite kite;
 	private float nifty;
-	
-	public CandleTrendWorker(Stock stock, Kite kite, float nifty) throws Exception {
+	float upDown = 0f;
+	public CandleTrendWorker(Stock stock, Kite kite) throws Exception {
 		this.stock = stock;
 		this.util = new Util();
 		this.kite = kite;
-		this.nifty = nifty;
 	}
 	
 	public void run() {
 		String message = Thread.currentThread().getName() + " Start. Trend = " + stock;
 		//System.out.println("\n");
 		Util.Logger.log(0, message);
-		processCommand();
+		try {
+			upDown = util.getPercChange(this.stock.SYMBOL);
+			processCommand();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		//System.out.println(Thread.currentThread().getName() + " End.");
 		Util.Logger.log(0,Thread.currentThread().getName() + " End.");
 	}
@@ -57,7 +63,7 @@ public class CandleTrendWorker implements Runnable{
 
 		BuyOpportunityChecker checker = new BuyOpportunityChecker(lastMinus2, lastMinus1, lastCandle);
 		
-		return  checker.checkAllRules(nifty);
+		return  checker.checkAllRules(upDown);
 		
 	}
 	
@@ -66,7 +72,7 @@ public class CandleTrendWorker implements Runnable{
 		
 		SellOpportunityChecker checker = new SellOpportunityChecker(lastMinus2, lastMinus1, lastCandle);
 		
-		return checker.checkAllRules(nifty);
+		return checker.checkAllRules(upDown);
 	}
 
 	private Opportunity checkForOpportunity(List<HistoricalDataEx> historicalData) {
@@ -91,23 +97,24 @@ public class CandleTrendWorker implements Runnable{
 		RulesValidation rvb = checkBuyingOpportunity(lastMinus2,lastMinus1,lastCandle);
 		RulesValidation rvs = checkSellingOpportunity(lastMinus2,lastMinus1,lastCandle);
 		
-		if(rvb!=null && rvb.is_valid)
-		{			
-			opty = new Opportunity();
-			opty.MKT = stock.MKT;
-			opty.Symbol = stock.SYMBOL;
-			opty.TradeType = TradeType.BUY;
-			opty.TimeStamp = lastCandle.timeStamp;
-			
-			opty.MA = rvb.is_MA_GoAhead;
-			opty.MOM = rvb.is_MOM_GoAhead;
-			opty.MACD = rvb.is_MACD_GoAhead;
-			opty.PVT = rvb.is_PVT_GoAhead;
-			opty.is_valid = rvb.is_valid;
-		}
-		else if(rvs!=null && rvs.is_valid)
-		{			
-			if(rvs!=null)
+		if(rvb!=null && rvs!=null)
+		{
+			if(rvb.Score > rvs.Score)
+			{
+				opty = new Opportunity();
+				opty.MKT = stock.MKT;
+				opty.Symbol = stock.SYMBOL;
+				opty.TradeType = TradeType.BUY;
+				opty.TimeStamp = lastCandle.timeStamp;
+				
+				opty.MA = rvb.is_MA_GoAhead;
+				opty.MOM = rvb.is_MOM_GoAhead;
+				opty.MACD = rvb.is_MACD_GoAhead;
+				opty.PVT = rvb.is_PVT_GoAhead;
+				opty.is_valid = rvb.is_valid;
+				opty.Score = rvb.Score;	
+			}
+			else
 			{
 				opty = new Opportunity();
 				opty.MKT = stock.MKT;
@@ -120,6 +127,7 @@ public class CandleTrendWorker implements Runnable{
 				opty.MACD = rvs.is_MACD_GoAhead;
 				opty.PVT = rvs.is_PVT_GoAhead;
 				opty.is_valid = rvs.is_valid;
+				opty.Score = rvb.Score;
 			}
 		}
 		return opty;
@@ -129,7 +137,7 @@ public class CandleTrendWorker implements Runnable{
 		try {
 			dao = new DAO();
 			//System.out.println("");
-			ArrayList<HistoricalDataEx> historicalData = getHistoricalData(stock);//dao.getHistoricalData(stock);
+			ArrayList<HistoricalDataEx> historicalData = dao.getHistoricalData(stock);//getHistoricalData(stock);//
 			
 			if(historicalData.size() < 11)
 			{
@@ -179,16 +187,53 @@ public class CandleTrendWorker implements Runnable{
 				if(opty!=null)
 				{
 					double slope = getSlope(historicalData);
-					opty = updateOptyQuote(opty);
+					if(opty.is_valid && Math.abs(opty.Score) > 50)
+					{
+						opty = updateOptyQuote(opty);
+						HistoricalDataEx nowCandle = subList.get(2);
+						double MA = nowCandle.MovingAvg;
+						
+						double top = nowCandle.high - nowCandle.open;
+						double bottom = nowCandle.close - nowCandle.low;
+						
+						if(opty.TradeType==TradeType.BUY)
+						{
+							if(opty.EntryPrice > MA )
+							{
+								opty.is_valid = false;
+							}
+							double ratio = top/bottom;
+							if(ratio < 2)
+							{
+								opty.is_valid = false;
+							}
+							if(slope < -1.5)
+							{
+								opty.is_valid = false;
+							}
+						}
+						else if(opty.TradeType==TradeType.SELL)
+						{
+							if(opty.EntryPrice < MA)
+							{
+								opty.is_valid = false;
+							}
+							double ratio = bottom/top;
+							if(ratio < 2)
+							{
+								opty.is_valid = false;
+							}	
+							if(slope > 1.5)
+							{
+								opty.is_valid = false;
+							}
+						}
+					}
+					
 					opty.Slope = slope;
 					storeOpportunity(opty);
 					System.out.println(opty.is_valid+"-"+opty);
 					Util.Logger.log(0, opty.is_valid+"-"+opty);
-				}
-				else
-				{
-					//System.out.println("Opty null for "+stock+" at "+((HistoricalDataEx)(subList.get(2))).timeStamp);
-					Util.Logger.log(0, "Opty null for "+stock);
 				}
 			}
 			

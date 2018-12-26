@@ -83,8 +83,8 @@ public class DAO
 
 
 			String query = " insert into stock_chart_prediction_ha "
-					+ "(MKT, SYMBOL, TRADE_DATE, ORDER_TYPE, ENTRY_PRICE, EXIT_PRICE, MA, MOM, MACD, PVT, SLOPE, IS_VALID)"
-					+ " values (?,?,?,?,?,?,?,?,?,?,?,?)";
+					+ "(MKT, SYMBOL, TRADE_DATE, ORDER_TYPE, ENTRY_PRICE, EXIT_PRICE, MA, MOM, MACD, PVT, SLOPE, IS_VALID, SCORE)"
+					+ " values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 			PreparedStatement preparedStmt = conn.prepareStatement(query);
 			preparedStmt.setString(1, stock.MKT);
@@ -94,11 +94,12 @@ public class DAO
 			preparedStmt.setDouble(5, opty.EntryPrice);
 			preparedStmt.setDouble(6, opty.ExitPrice);
 			preparedStmt.setDouble(7, opty.MA);
-			preparedStmt.setDouble(8, opty.MOM);
+			preparedStmt.setDouble(8, opty.MOM==Double.NEGATIVE_INFINITY?0:opty.MOM);
 			preparedStmt.setDouble(9, opty.MACD);
 			preparedStmt.setDouble(10, opty.PVT);
 			preparedStmt.setDouble(11, opty.Slope);
 			preparedStmt.setInt(12, (opty.is_valid ? 1:0));
+			preparedStmt.setDouble(13, opty.Score);
 			
 			preparedStmt.execute();
 			preparedStmt.close();
@@ -507,7 +508,7 @@ public class DAO
 
 	public ArrayList<HistoricalDataEx> getHistoricalData(Stock stock) {
 		ArrayList<HistoricalDataEx> historicalData = new ArrayList<HistoricalDataEx>();
-		String query = "SELECT * FROM stock_candle_data_1min  where MKT='"+stock.MKT+"' and SYMBOL='"+stock.SYMBOL+"' order by TIMESTAMP desc limit 1000";
+		String query = "SELECT * FROM stock_candle_data_1min  where MKT='"+stock.MKT+"' and SYMBOL='"+stock.SYMBOL+"' order by TIMESTAMP desc limit 400";
 		Connection conn = getConnection();
 		try {
 			Statement st = conn.createStatement();

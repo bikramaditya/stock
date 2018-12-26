@@ -14,6 +14,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.internal.StringMap;
+
 import entity.Sentiment;
 
 
@@ -24,10 +30,6 @@ public class Util
 	String apiKey = "XHVEY8A7PXUZJO1P";
 	public static CandleLogger Logger = null;
 
-	private static float globalIndices = 0;
-	private static float NiftyIndex = 0;
-	private static float GSXNifty = 0;
-	
 	public static Sentiment sentiment = Sentiment.NORMAL;
 
 	public Util() throws Exception
@@ -44,26 +46,6 @@ public class Util
 		{
 			TradingDays = getTradingDays(2018, "NSE");
 		}
-		/*
-		if (globalIndices == 0f) {
-			globalIndices = getGlobalIndices();
-		}
-		if (NiftyIndex == 0f) {
-			NiftyIndex = getNifty();
-		}
-		if (GSXNifty == 0f) {
-			//GSXNifty = getGSXNifty();
-		}
-		
-		if(globalIndices+NiftyIndex > 0)
-		{
-			sentiment = Sentiment.BULLISH;
-		}
-		else if(globalIndices+NiftyIndex < 0)
-		{
-			sentiment = Sentiment.BEARISH;
-		}
-		*/
 	}
 	public float getGSXNifty() {
 		float GSXNIFTY = 0f;
@@ -152,6 +134,32 @@ public class Util
 		}
 		return globalAvg;
 	}
+	
+	public float getPercChange(String SYM) throws Exception {
+		float upDown = 0f;
+		try {
+			Document doc = Jsoup.connect("https://www.nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol="+SYM).get();
+	
+			Element responseDiv = doc.getElementById("responseDiv");
+			
+			String JSONStr = responseDiv.text(); 
+			
+			JsonParser parser = new JsonParser();
+			JsonObject o = parser.parse(JSONStr).getAsJsonObject();
+			JsonObject ar = (o.getAsJsonArray("data").get(0)).getAsJsonObject();
+			JsonElement map = ar.get("pChange");
+			
+			String text = map.getAsString();
+			upDown = Float.parseFloat(text);
+		}
+		catch(Exception e)
+		{
+			Logger.log(1, "Could not get updown, exiting thread"+e.getMessage());
+			throw new Exception("Could not get updown");
+		}
+		return upDown;
+	}
+	
 	public boolean isTradingDay(String yyymmdd)
 	{
 		if(TradingDays !=null && TradingDays.contains(yyymmdd))
@@ -246,7 +254,7 @@ public class Util
 		String today = getTodayYYMMDD();
 		
 		if (now.isAfter(LocalDateTime.parse(today + "T09:15:00"))
-				&& now.isBefore(LocalDateTime.parse(today + "T14:00:00")))
+				&& now.isBefore(LocalDateTime.parse(today + "T14:30:00")))
 		{
 			return true;
 		}
