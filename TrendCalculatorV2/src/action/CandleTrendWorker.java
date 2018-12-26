@@ -139,7 +139,7 @@ public class CandleTrendWorker implements Runnable{
 			//System.out.println("");
 			ArrayList<HistoricalDataEx> historicalData = dao.getHistoricalData(stock);//getHistoricalData(stock);//
 			
-			if(historicalData.size() < 11)
+			if(historicalData.size() < 30)
 			{
 				throw new Exception("Not enough data to plot trend");
 			}
@@ -163,7 +163,7 @@ public class CandleTrendWorker implements Runnable{
 			System.out.println("");
 			*/
 			
-			//for(int i = historicalData.size()-72; i <= historicalData.size();i++)
+			//for(int i = historicalData.size()-350; i <= historicalData.size();i++)
 			{
 				int start = historicalData.size()-3;
 				int end = historicalData.size();
@@ -171,30 +171,20 @@ public class CandleTrendWorker implements Runnable{
 				//start = i-3;
 				//end = i;
 
-				
 				List<HistoricalDataEx> subList =  historicalData.subList(start, end);
-				
-				//Get slope
-
-//				
-//				if(slope == -1000 || Math.abs(slope) <= 0.25 )
-//				{
-//					return;
-//				}
 				
 				Opportunity opty = checkForOpportunity(subList);
 				
 				if(opty!=null)
 				{
 					double slope = getSlope(historicalData);
-					if(opty.is_valid && Math.abs(opty.Score) > 50)
+					if(opty.is_valid && Math.abs(opty.Score) > 1)
 					{
-						opty = updateOptyQuote(opty);
 						HistoricalDataEx nowCandle = subList.get(2);
 						double MA = nowCandle.MovingAvg;
 						
-						double top = nowCandle.high - nowCandle.open;
-						double bottom = nowCandle.close - nowCandle.low;
+						double top = nowCandle.HA.High - nowCandle.HA.Open;
+						double bottom = nowCandle.HA.Close - nowCandle.HA.Low;
 						
 						if(opty.TradeType==TradeType.BUY)
 						{
@@ -202,12 +192,14 @@ public class CandleTrendWorker implements Runnable{
 							{
 								opty.is_valid = false;
 							}
+							
 							double ratio = top/bottom;
-							if(ratio < 2)
+							
+							if(ratio < 2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
 							{
 								opty.is_valid = false;
 							}
-							if(slope < -1.5)
+							if(slope < 1.5)
 							{
 								opty.is_valid = false;
 							}
@@ -218,16 +210,27 @@ public class CandleTrendWorker implements Runnable{
 							{
 								opty.is_valid = false;
 							}
+							
 							double ratio = bottom/top;
-							if(ratio < 2)
+							
+							if(ratio < 2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
 							{
 								opty.is_valid = false;
 							}	
-							if(slope > 1.5)
+							if(slope > -1.5)
 							{
 								opty.is_valid = false;
 							}
 						}
+						
+						if(opty.is_valid)
+						{
+							opty = updateOptyQuote(opty);
+						}
+					}
+					else
+					{
+						opty.is_valid = false;
 					}
 					
 					opty.Slope = slope;
@@ -236,8 +239,6 @@ public class CandleTrendWorker implements Runnable{
 					Util.Logger.log(0, opty.is_valid+"-"+opty);
 				}
 			}
-			
-			//System.out.println();
 		} catch (Exception e) {
 			e.printStackTrace();
 			Util.Logger.log(1,e.getMessage());
@@ -358,9 +359,9 @@ public class CandleTrendWorker implements Runnable{
 		int i = 0 ;
 		List<HistoricalDataEx> subList = new ArrayList<HistoricalDataEx>();
 		
-		if(historicalData.size()>=10)
+		if(historicalData.size()>=60)
 		{
-			subList =  historicalData.subList(historicalData.size()-10, historicalData.size());	
+			subList =  historicalData.subList(historicalData.size()-60, historicalData.size());	
 		}		
 		
 		for (HistoricalDataEx candle : subList) 
@@ -371,9 +372,9 @@ public class CandleTrendWorker implements Runnable{
 				LocalDateTime localDateTime = recoTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 				
 				String today = util.getTodayYYMMDD();
-				LocalDateTime startTime = LocalDateTime.parse(today + "T09:40:00");
+				LocalDateTime startTime = LocalDateTime.parse(today + "T09:15:00");
 				
-				LocalDateTime endTime = LocalDateTime.parse(today + "T14:15:00");
+				LocalDateTime endTime = LocalDateTime.parse(today + "T14:30:00");
 				
 				if(localDateTime.isAfter(startTime) && localDateTime.isBefore(endTime))
 				{
@@ -386,7 +387,7 @@ public class CandleTrendWorker implements Runnable{
 				e.printStackTrace();
 			}
 		}
-		if(i < 3)
+		if(i < 2)
 		{
 			return -1000;
 		}

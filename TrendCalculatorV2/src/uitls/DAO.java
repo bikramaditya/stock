@@ -94,12 +94,12 @@ public class DAO
 			preparedStmt.setDouble(5, opty.EntryPrice);
 			preparedStmt.setDouble(6, opty.ExitPrice);
 			preparedStmt.setDouble(7, opty.MA);
-			preparedStmt.setDouble(8, opty.MOM==Double.NEGATIVE_INFINITY?0:opty.MOM);
+			preparedStmt.setDouble(8, (opty.MOM==Double.NEGATIVE_INFINITY || opty.MOM==Double.POSITIVE_INFINITY)?0:opty.MOM);
 			preparedStmt.setDouble(9, opty.MACD);
 			preparedStmt.setDouble(10, opty.PVT);
 			preparedStmt.setDouble(11, opty.Slope);
 			preparedStmt.setInt(12, (opty.is_valid ? 1:0));
-			preparedStmt.setDouble(13, opty.Score);
+			preparedStmt.setDouble(13, (opty.Score==Double.POSITIVE_INFINITY || opty.Score==Double.NEGATIVE_INFINITY)?0:opty.Score);
 			
 			preparedStmt.execute();
 			preparedStmt.close();

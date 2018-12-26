@@ -35,7 +35,6 @@ public class TrendCalculatorV2 {
 		boolean isTradingDay = util.isTradingDay(today);
 		boolean isMarketOpen = util.isMarketOpen();
 
-
 		dao = new DAO();
 		
 		Kite kite = new Kite();
@@ -60,7 +59,7 @@ public class TrendCalculatorV2 {
 						try {
 							worker = new CandleTrendWorker(stock,kite);
 				            executor.execute(worker);
-				            Thread.sleep(300);
+				            Thread.sleep(500);
 						} catch (Exception e) {
 							e.printStackTrace();
 							Util.Logger.log(1, e.getMessage());
