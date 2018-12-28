@@ -29,14 +29,14 @@ public class BuyOpportunityChecker
 		
 		if(upDown > 0)
 		{
-			if(is_MOM_GoAhead >= 3 && is_MACD_GoAhead > 1 && is_PVT_GoAhead > 0.5 && is_HA_GoAhead > 0)
+			if(is_MOM_GoAhead >= 3 && is_MACD_GoAhead > 1 && is_PVT_GoAhead > 1 && is_HA_GoAhead > 0)
 			{
 				is_valid = true;
 			}	
 		}
 		else
 		{
-			if(is_MOM_GoAhead >= 5 && is_MACD_GoAhead > 2 && is_PVT_GoAhead > 1 && is_HA_GoAhead > 0)
+			if(is_MOM_GoAhead >= 5 && is_MACD_GoAhead > 2 && is_PVT_GoAhead > 2 && is_HA_GoAhead > 0)
 			{
 				is_valid = true;
 			}
@@ -68,26 +68,17 @@ public class BuyOpportunityChecker
 
 	private double is_MACD_GoAhead(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) {
 		double is_MACD_GoAhead = 0;
-		//Is MACD line rising
-		//if(lastMinus1.MACD < lastCandle.MACD) 
+		
+		double diff2 = Math.abs(lastMinus2.MACD-lastMinus2.Signal);
+		double diff1 = Math.abs(lastMinus1.MACD-lastMinus1.Signal);
+		double diff0 = Math.abs(lastCandle.MACD-lastCandle.Signal);
+		if(diff2 > diff0)
 		{
-			//Is signal rising
-			//if(lastMinus2.Signal < lastCandle.Signal && lastMinus1.Signal < lastCandle.Signal)
-			{
-				//Are they converging
-				double diff2 = Math.abs(lastMinus1.MACD-lastMinus1.Signal);
-
-				double diff0 = Math.abs(lastCandle.MACD-lastCandle.Signal);
-				//if(diff2 > diff0)
-				{
-					//Is signal slope positive
-					//double siggSlope = lastCandle.Signal-lastMinus1.Signal;
-					//if(siggSlope > 0)
-					{
-						is_MACD_GoAhead = 100*(diff2 - diff0)/diff2;	
-					}
-				}
-			}
+			is_MACD_GoAhead = 100*(diff2 - diff0)/diff2;
+		}
+		else if(diff1 > diff0)
+		{
+			is_MACD_GoAhead = 100*(diff1 - diff0)/diff1;
 		}
 		
 		return is_MACD_GoAhead;

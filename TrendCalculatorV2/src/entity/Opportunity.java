@@ -15,6 +15,8 @@ public class Opportunity {
 	public double PVT;
 	public boolean is_valid;
 	public double Score;
+	public double LastCandleClose;
+	
 	@Override
 	public String toString() {
 		return "Opportunity [MKT=" + MKT + ", Symbol=" + Symbol + ", TradeType=" + TradeType + ", EntryPrice="

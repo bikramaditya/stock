@@ -107,6 +107,10 @@ public class CandleTrendWorker implements Runnable{
 				opty.TradeType = TradeType.BUY;
 				opty.TimeStamp = lastCandle.timeStamp;
 				
+				opty.EntryPrice = lastCandle.close;
+				opty.ExitPrice = opty.EntryPrice*(1+0.002);
+				opty.StopLoss = opty.EntryPrice*(1-0.02);
+			
 				opty.MA = rvb.is_MA_GoAhead;
 				opty.MOM = rvb.is_MOM_GoAhead;
 				opty.MACD = rvb.is_MACD_GoAhead;
@@ -121,6 +125,10 @@ public class CandleTrendWorker implements Runnable{
 				opty.Symbol = stock.SYMBOL;
 				opty.TradeType = TradeType.SELL;
 				opty.TimeStamp = lastCandle.timeStamp;
+				
+				opty.EntryPrice = lastCandle.close;
+				opty.ExitPrice = opty.EntryPrice*(1-0.002);
+				opty.StopLoss = opty.EntryPrice*(1+0.02);
 				
 				opty.MA = rvs.is_MA_GoAhead;
 				opty.MOM = rvs.is_MOM_GoAhead;
@@ -177,10 +185,13 @@ public class CandleTrendWorker implements Runnable{
 				
 				if(opty!=null)
 				{
+					HistoricalDataEx nowCandle = subList.get(2);
+					
 					double slope = getSlope(historicalData);
 					if(opty.is_valid && Math.abs(opty.Score) > 1)
 					{
-						HistoricalDataEx nowCandle = subList.get(2);
+						opty = updateOptyQuote(opty);
+						
 						double MA = nowCandle.MovingAvg;
 						
 						double top = nowCandle.HA.High - nowCandle.HA.Open;
@@ -195,11 +206,11 @@ public class CandleTrendWorker implements Runnable{
 							
 							double ratio = top/bottom;
 							
-							if(ratio < 2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
+							if(ratio < 1.2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
 							{
 								opty.is_valid = false;
 							}
-							if(slope < 1.5)
+							if(opty.Score < 80)
 							{
 								opty.is_valid = false;
 							}
@@ -213,19 +224,14 @@ public class CandleTrendWorker implements Runnable{
 							
 							double ratio = bottom/top;
 							
-							if(ratio < 2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
+							if(ratio < 1.2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
 							{
 								opty.is_valid = false;
 							}	
-							if(slope > -1.5)
+							if(opty.Score < 80)
 							{
 								opty.is_valid = false;
 							}
-						}
-						
-						if(opty.is_valid)
-						{
-							opty = updateOptyQuote(opty);
 						}
 					}
 					else
@@ -233,6 +239,7 @@ public class CandleTrendWorker implements Runnable{
 						opty.is_valid = false;
 					}
 					
+					opty.LastCandleClose = nowCandle.close;
 					opty.Slope = slope;
 					storeOpportunity(opty);
 					System.out.println(opty.is_valid+"-"+opty);
@@ -294,7 +301,6 @@ public class CandleTrendWorker implements Runnable{
 		arr[0] = instrument;
 		Map<String, Quote> quotes = kite.getAllQuotes(arr);
 		double lastPrice = quotes.get(instrument).lastPrice;
-		
 		
 		if(opty.TradeType == TradeType.BUY)
 		{

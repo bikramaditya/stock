@@ -83,8 +83,8 @@ public class DAO
 
 
 			String query = " insert into stock_chart_prediction_ha "
-					+ "(MKT, SYMBOL, TRADE_DATE, ORDER_TYPE, ENTRY_PRICE, EXIT_PRICE, MA, MOM, MACD, PVT, SLOPE, IS_VALID, SCORE)"
-					+ " values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+					+ "(MKT, SYMBOL, TRADE_DATE, ORDER_TYPE, ENTRY_PRICE, EXIT_PRICE, MA, MOM, MACD, PVT, SLOPE, IS_VALID, SCORE, LastCandleClose)"
+					+ " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 			PreparedStatement preparedStmt = conn.prepareStatement(query);
 			preparedStmt.setString(1, stock.MKT);
@@ -100,6 +100,7 @@ public class DAO
 			preparedStmt.setDouble(11, opty.Slope);
 			preparedStmt.setInt(12, (opty.is_valid ? 1:0));
 			preparedStmt.setDouble(13, (opty.Score==Double.POSITIVE_INFINITY || opty.Score==Double.NEGATIVE_INFINITY)?0:opty.Score);
+			preparedStmt.setDouble(14, opty.LastCandleClose);
 			
 			preparedStmt.execute();
 			preparedStmt.close();
@@ -481,8 +482,7 @@ public class DAO
 
 	public ArrayList<Stock> getFreshDataWatchList(String MKT) {
 		ArrayList<Stock> watchList = new ArrayList<Stock>();
-		String query = "SELECT * FROM stock_watch_list where IS_ACTIVE=1 and IS_FRESH_DATA=1 and instrument_token is not null\r\n" + 
-				"and symbol not in (SELECT distinct(symbol) FROM stock1.stock_chart_prediction_ha where date(trade_date)=CURDATE() and is_valid=1 and MKT='"+MKT+"')";
+		String query = "SELECT * FROM stock_watch_list where IS_ACTIVE=1 and IS_FRESH_DATA=1 and instrument_token is not null ";
 		Connection conn = getConnection();
 		try {
 			Statement st = conn.createStatement();

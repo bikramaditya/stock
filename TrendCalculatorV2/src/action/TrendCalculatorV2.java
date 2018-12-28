@@ -80,7 +80,7 @@ public class TrendCalculatorV2 {
 	        
 	        isMarketOpen = util.isMarketOpen();
 	        
-	        Thread.sleep(5000);
+	        Thread.sleep(1000);
 		}
 		//else
 		{
