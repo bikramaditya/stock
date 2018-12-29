@@ -190,8 +190,6 @@ public class CandleTrendWorker implements Runnable{
 					double slope = getSlope(historicalData);
 					if(opty.is_valid && Math.abs(opty.Score) > 1)
 					{
-						opty = updateOptyQuote(opty);
-						
 						double MA = nowCandle.MovingAvg;
 						
 						double top = nowCandle.HA.High - nowCandle.HA.Open;
@@ -292,30 +290,6 @@ public class CandleTrendWorker implements Runnable{
 			double HALow = Math.min(c.low, Math.max(c.HA.Open, c.HA.Close));
 			c.HA.Low = HALow;
 		}
-	}
-
-	private Opportunity updateOptyQuote(Opportunity opty) 
-	{
-		String instrument = opty.MKT+":"+opty.Symbol;
-		String[] arr = new String[1];
-		arr[0] = instrument;
-		Map<String, Quote> quotes = kite.getAllQuotes(arr);
-		double lastPrice = quotes.get(instrument).lastPrice;
-		
-		if(opty.TradeType == TradeType.BUY)
-		{
-			opty.EntryPrice = lastPrice;
-			opty.ExitPrice = opty.EntryPrice*(1+0.002);
-			opty.StopLoss = opty.EntryPrice*(1-0.02);
-		}
-		else if(opty.TradeType == TradeType.SELL)
-		{
-			opty.EntryPrice = lastPrice;
-			opty.ExitPrice = opty.EntryPrice*(1-0.002);
-			opty.StopLoss = opty.EntryPrice*(1+0.02);
-		}
-		
-		return opty;
 	}
 
 	private ArrayList<HistoricalDataEx> getHistoricalData(Stock stock) 
