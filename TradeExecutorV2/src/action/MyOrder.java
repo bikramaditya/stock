@@ -61,9 +61,10 @@ public class MyOrder {
 	        orderParams.exchange = Constants.EXCHANGE_NSE;
 	        orderParams.validity = Constants.VALIDITY_DAY;
 	        
-	        orderParams.squareoff = 0.001 * opty.EntryPrice;
+	        orderParams.squareoff = 0.0015 * opty.EntryPrice;
 	        
 	        order = kite.placeOrder(orderParams, Constants.VARIETY_BO);
+	        
 	        System.out.println(order.orderId);
 	        Util.Logger.log(0, order.orderId);
 		} catch (Exception | KiteException e) {

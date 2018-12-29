@@ -2,12 +2,15 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="getSlope" key="selection"/>
+		<item value="bracket" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="bracket"/>
+			<item value="margin"/>
+			<item value="order"/>
 			<item value="getSlope"/>
 			<item value="checkForOpportunity"/>
 			<item value="slope"/>
@@ -20,8 +23,6 @@
 			<item value="for stock"/>
 			<item value="for"/>
 			<item value="for Stock"/>
-			<item value="Trying BUY "/>
-			<item value="exit"/>
 		</list>
 		<list key="replacehistory">
 		</list>
