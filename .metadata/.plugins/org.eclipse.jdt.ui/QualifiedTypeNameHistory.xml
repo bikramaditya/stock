@@ -12,9 +12,9 @@
 <fullyQualifiedTypeName name="com.google.gson.JsonParser"/>
 <fullyQualifiedTypeName name="com.google.gson.JsonArray"/>
 <fullyQualifiedTypeName name="com.google.gson.internal.StringMap"/>
-<fullyQualifiedTypeName name="java.lang.Double"/>
 <fullyQualifiedTypeName name="action.TradeExecutorV2"/>
 <fullyQualifiedTypeName name="uitls.Util"/>
 <fullyQualifiedTypeName name="entity.TradeType"/>
 <fullyQualifiedTypeName name="com.zerodhatech.models.Order"/>
+<fullyQualifiedTypeName name="java.lang.Double"/>
 </qualifiedTypeNameHistroy>

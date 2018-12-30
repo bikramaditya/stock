@@ -39,7 +39,7 @@ public class TrendCalculatorV2 {
 		
 		Kite kite = new Kite();
 		
-		while (isTradingDay && isMarketOpen)
+		while (isTradingDay && isMarketOpen )
 		{	
 			System.out.println("Starting all threads - "+new Date());
 	        Util.Logger.log(0, "Starting all threads - "+new Date());
@@ -48,31 +48,26 @@ public class TrendCalculatorV2 {
 			
 			if(watchList.size() > 0)
 			{
-				//float nifty = util.getNifty();
+				ExecutorService executor = Executors.newFixedThreadPool(2);
 				
-				//if(nifty!=0)
-				{
-					ExecutorService executor = Executors.newFixedThreadPool(2);
-					
-					for (Stock stock : watchList) {
-						Runnable worker;
-						try {
-							worker = new CandleTrendWorker(stock,kite);
-				            executor.execute(worker);
-				            Thread.sleep(500);
-						} catch (Exception e) {
-							e.printStackTrace();
-							Util.Logger.log(1, e.getMessage());
-						}
+				for (Stock stock : watchList) {
+					Runnable worker;
+					try {
+						worker = new CandleTrendWorker(stock,kite);
+			            executor.execute(worker);
+			            //Thread.sleep(100);
+					} catch (Exception e) {
+						e.printStackTrace();
+						Util.Logger.log(1, e.getMessage());
 					}
+				}
+	        
+				executor.shutdown();
+		        while (!executor.isTerminated()) {
+		        	Thread.sleep(200);
+		        }
 		        
-					executor.shutdown();
-			        while (!executor.isTerminated()) {
-			        	Thread.sleep(200);
-			        }
-			        
-			        dao.updateWatchListAnalysisEnd("NSE");		
-				}							
+		        dao.updateWatchListAnalysisEnd("NSE");							
 			}
 	        
 	        System.out.print("--Finished all threads"+new Date()+"\n\n");
@@ -82,11 +77,9 @@ public class TrendCalculatorV2 {
 	        
 	        Thread.sleep(1000);
 		}
-		//else
-		{
-			System.out.println("isTradingDay && isMarketOpen"+isTradingDay +"-"+ isMarketOpen);
-	        Util.Logger.log(0, "isTradingDay && isMarketOpen"+isTradingDay +"-"+ isMarketOpen);
-		}
+		
+		System.out.println("isTradingDay && isMarketOpen"+isTradingDay +"-"+ isMarketOpen);
+        Util.Logger.log(0, "isTradingDay && isMarketOpen"+isTradingDay +"-"+ isMarketOpen);
 	}
 
 	/*

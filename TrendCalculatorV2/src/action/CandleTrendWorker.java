@@ -10,13 +10,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.jfree.ui.RefineryUtilities;
-
-import com.zerodhatech.models.Quote;
 
 import charts.StockChart;
 import entity.HistoricalDataEx;
@@ -33,24 +29,24 @@ public class CandleTrendWorker implements Runnable{
 	private Stock stock;
 	private DAO dao = null;
 	private Util util = null;
-	private Kite kite;
-	private float nifty;
 	float upDown = 0f;
 	public CandleTrendWorker(Stock stock, Kite kite) throws Exception {
 		this.stock = stock;
 		this.util = new Util();
-		this.kite = kite;
 	}
 	
 	public void run() {
 		String message = Thread.currentThread().getName() + " Start. Trend = " + stock;
-		//System.out.println("\n");
+
 		Util.Logger.log(0, message);
 		try {
+			
 			upDown = util.getPercChange(this.stock.SYMBOL);
+			
 			processCommand();
+			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			Util.Logger.log(1, e.getMessage());
 			e.printStackTrace();
 		}
 
@@ -108,7 +104,7 @@ public class CandleTrendWorker implements Runnable{
 				opty.TimeStamp = lastCandle.timeStamp;
 				
 				opty.EntryPrice = lastCandle.close;
-				opty.ExitPrice = opty.EntryPrice*(1+0.002);
+				opty.ExitPrice = opty.EntryPrice*(1+0.001);
 				opty.StopLoss = opty.EntryPrice*(1-0.02);
 			
 				opty.MA = rvb.is_MA_GoAhead;
@@ -118,7 +114,7 @@ public class CandleTrendWorker implements Runnable{
 				opty.is_valid = rvb.is_valid;
 				opty.Score = rvb.Score;	
 			}
-			else
+			else if(rvb.Score < rvs.Score)
 			{
 				opty = new Opportunity();
 				opty.MKT = stock.MKT;
@@ -127,7 +123,7 @@ public class CandleTrendWorker implements Runnable{
 				opty.TimeStamp = lastCandle.timeStamp;
 				
 				opty.EntryPrice = lastCandle.close;
-				opty.ExitPrice = opty.EntryPrice*(1-0.002);
+				opty.ExitPrice = opty.EntryPrice*(1-0.001);
 				opty.StopLoss = opty.EntryPrice*(1+0.02);
 				
 				opty.MA = rvs.is_MA_GoAhead;
@@ -135,7 +131,7 @@ public class CandleTrendWorker implements Runnable{
 				opty.MACD = rvs.is_MACD_GoAhead;
 				opty.PVT = rvs.is_PVT_GoAhead;
 				opty.is_valid = rvs.is_valid;
-				opty.Score = rvb.Score;
+				opty.Score = rvs.Score;
 			}
 		}
 		return opty;
@@ -187,61 +183,17 @@ public class CandleTrendWorker implements Runnable{
 				{
 					HistoricalDataEx nowCandle = subList.get(2);
 					
-					double slope = getSlope(historicalData);
-					if(opty.is_valid && Math.abs(opty.Score) > 1)
-					{
-						double MA = nowCandle.MovingAvg;
-						
-						double top = nowCandle.HA.High - nowCandle.HA.Open;
-						double bottom = nowCandle.HA.Close - nowCandle.HA.Low;
-						
-						if(opty.TradeType==TradeType.BUY)
-						{
-							if(opty.EntryPrice > MA )
-							{
-								opty.is_valid = false;
-							}
-							
-							double ratio = top/bottom;
-							
-							if(ratio < 1.2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
-							{
-								opty.is_valid = false;
-							}
-							if(opty.Score < 80)
-							{
-								opty.is_valid = false;
-							}
-						}
-						else if(opty.TradeType==TradeType.SELL)
-						{
-							if(opty.EntryPrice < MA)
-							{
-								opty.is_valid = false;
-							}
-							
-							double ratio = bottom/top;
-							
-							if(ratio < 1.2 || ratio==Double.NEGATIVE_INFINITY || ratio==Double.POSITIVE_INFINITY)
-							{
-								opty.is_valid = false;
-							}	
-							if(opty.Score < 80)
-							{
-								opty.is_valid = false;
-							}
-						}
-					}
-					else
-					{
-						opty.is_valid = false;
-					}
+					//double slope = getSlope(historicalData);
 					
 					opty.LastCandleClose = nowCandle.close;
-					opty.Slope = slope;
-					storeOpportunity(opty);
-					System.out.println(opty.is_valid+"-"+opty);
-					Util.Logger.log(0, opty.is_valid+"-"+opty);
+					//opty.Slope = slope;
+					
+					if(opty.is_valid)
+					{
+						storeOpportunity(opty);
+						System.out.println(opty.is_valid+"-"+opty);
+						Util.Logger.log(0, opty.is_valid+"-"+opty);
+					}
 				}
 			}
 		} catch (Exception e) {
