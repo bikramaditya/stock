@@ -77,11 +77,12 @@ public class SellOpportunityChecker {
 		double diff1 = Math.abs(lastMinus1.MACD - lastMinus1.Signal);
 		double diff2 = Math.abs(lastMinus2.MACD - lastMinus2.Signal);
 		
+		
 		if(diff2 > diff1 && diff1 > diff0)
 		{
 			double abs = diff0+diff1+diff2;
 			
-			if(abs > 0.35)
+			if(abs > 0.5)
 			{
 				is_MACD_GoAhead = abs;
 			}
@@ -91,9 +92,15 @@ public class SellOpportunityChecker {
 
 	private double is_MOM_GoAhead(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) 
 	{
+//
+//		if(("2019-01-01 10:23:00".equals(lastCandle.timeStamp)) || ("2019-01-01 09:50:00".equals(lastCandle.timeStamp)))
+//		{
+//			System.out.println();
+//		}
+//		
 		double is_MOM_GoAhead = 0;
 		//Is MOM falling
-		if(lastMinus1.MoM > lastCandle.MoM)
+		if(lastMinus2.MoM > lastMinus1.MoM && lastMinus1.MoM > lastCandle.MoM)
 		{
 			is_MOM_GoAhead = 100*(lastCandle.MoM - lastMinus1.MoM)/((lastCandle.MoM+lastMinus1.MoM)/2);
 		}
@@ -104,24 +111,7 @@ public class SellOpportunityChecker {
 	{
 		double is_MA_GoAhead = 0;
 		
-		//Is MA rising
-		if(lastMinus2.MovingAvg < lastMinus1.MovingAvg && lastMinus1.MovingAvg < lastCandle.MovingAvg) 
-		{
-			//Is current close below  MA 
-			//double maGap = 100*(lastCandle.close - lastCandle.MovingAvg)/lastCandle.MovingAvg;
-			//if(lastCandle.close < lastCandle.MovingAvg)
-			{
-				//Is current value rising
-				if(lastMinus1.close < lastCandle.close)
-				{
-					is_MA_GoAhead = 100*(lastCandle.MovingAvg - lastMinus1.MovingAvg)/lastMinus1.MovingAvg;
-				}
-				else if(lastMinus2.close < lastCandle.close)
-				{
-					is_MA_GoAhead = 100*(lastCandle.MovingAvg - lastMinus2.MovingAvg)/lastMinus2.MovingAvg;
-				}
-			}
-		}
+		is_MA_GoAhead = 100*(lastCandle.MovingAvg - lastCandle.close)/lastCandle.MovingAvg;
 		return is_MA_GoAhead;
 	}
 	private double is_HA_GoAhead(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) 
@@ -136,10 +126,6 @@ public class SellOpportunityChecker {
 					((lastCandle.HA.Close + lastCandle.HA.Open)/2));
 			double ratio = Math.abs(bottom/top);
 			
-			if(("2018-12-31 10:52:00".equals(lastCandle.timeStamp)) || ("2018-12-28 12:12:00".equals(lastCandle.timeStamp)))
-			{
-				System.out.println();
-			}
 			if(top==0 
 					|| ratio==Double.POSITIVE_INFINITY 
 					|| ratio==Double.NEGATIVE_INFINITY || ratio > 1 || top <0)

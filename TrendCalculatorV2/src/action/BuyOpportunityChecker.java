@@ -82,7 +82,7 @@ public class BuyOpportunityChecker
 		{
 			double abs = diff0+diff1+diff2;
 			
-			if(abs > 0.35)
+			if(abs > 0.5)
 			{
 				is_MACD_GoAhead = abs;
 			}
@@ -94,7 +94,7 @@ public class BuyOpportunityChecker
 	{
 		double is_MOM_GoAhead = 0;
 		//Is MOM rising
-		if(lastMinus1.MoM < lastCandle.MoM)
+		if(lastMinus2.MoM < lastMinus1.MoM && lastMinus1.MoM < lastCandle.MoM)
 		{
 			is_MOM_GoAhead = 100*(lastCandle.MoM - lastMinus1.MoM)/((lastCandle.MoM+lastMinus1.MoM)/2);
 		}
