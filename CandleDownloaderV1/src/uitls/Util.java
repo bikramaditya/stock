@@ -28,7 +28,7 @@ public class Util
 		}
 		if(TradingDays==null)
 		{
-			TradingDays = getTradingDays(2018, "NSE");//Future bug
+			TradingDays = getTradingDays(2019, "NSE");//Future bug
 		}
 	}
 	public boolean isTradingDay(String yyymmdd)

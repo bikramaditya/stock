@@ -39,7 +39,7 @@ public class TrendCalculatorV2 {
 		
 		Kite kite = new Kite();
 		
-		while (isTradingDay && isMarketOpen )
+		while (isTradingDay && isMarketOpen)
 		{	
 			System.out.println("Starting all threads - "+new Date());
 	        Util.Logger.log(0, "Starting all threads - "+new Date());
@@ -53,9 +53,12 @@ public class TrendCalculatorV2 {
 				for (Stock stock : watchList) {
 					Runnable worker;
 					try {
-						worker = new CandleTrendWorker(stock,kite);
-			            executor.execute(worker);
-			            //Thread.sleep(100);
+						//if(stock.SYMBOL.equals("HINDPETRO"))
+						{
+							worker = new CandleTrendWorker(stock,kite);
+							executor.execute(worker);
+				            //Thread.sleep(100000000);
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 						Util.Logger.log(1, e.getMessage());

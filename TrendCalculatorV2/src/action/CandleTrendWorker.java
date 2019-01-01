@@ -39,6 +39,8 @@ public class CandleTrendWorker implements Runnable{
 		String message = Thread.currentThread().getName() + " Start. Trend = " + stock;
 
 		Util.Logger.log(0, message);
+		System.out.println(message);
+		
 		try {
 			
 			upDown = util.getPercChange(this.stock.SYMBOL);
@@ -90,49 +92,44 @@ public class CandleTrendWorker implements Runnable{
 		HistoricalDataEx lastMinus1 = last3Candles.get(1);
 		HistoricalDataEx lastCandle = last3Candles.get(2);
 		
-		RulesValidation rvb = checkBuyingOpportunity(lastMinus2,lastMinus1,lastCandle);
-		RulesValidation rvs = checkSellingOpportunity(lastMinus2,lastMinus1,lastCandle);
+		RulesValidation rv = null;
 		
-		if(rvb!=null && rvs!=null)
+		if(upDown > 0)
 		{
-			if(rvb.Score > rvs.Score)
-			{
-				opty = new Opportunity();
-				opty.MKT = stock.MKT;
-				opty.Symbol = stock.SYMBOL;
-				opty.TradeType = TradeType.BUY;
-				opty.TimeStamp = lastCandle.timeStamp;
-				
-				opty.EntryPrice = lastCandle.close;
-				opty.ExitPrice = opty.EntryPrice*(1+0.001);
-				opty.StopLoss = opty.EntryPrice*(1-0.02);
+			rv = checkBuyingOpportunity(lastMinus2,lastMinus1,lastCandle);	
+		}
+		else if (upDown < 0)
+		{
+			rv = checkSellingOpportunity(lastMinus2,lastMinus1,lastCandle);
+		}
+		
+		
+		if(rv!=null)
+		{
+			opty = new Opportunity();
+			opty.MKT = stock.MKT;
+			opty.Symbol = stock.SYMBOL;
+			opty.TradeType = rv.tradeType;
+			opty.TimeStamp = lastCandle.timeStamp;
 			
-				opty.MA = rvb.is_MA_GoAhead;
-				opty.MOM = rvb.is_MOM_GoAhead;
-				opty.MACD = rvb.is_MACD_GoAhead;
-				opty.PVT = rvb.is_PVT_GoAhead;
-				opty.is_valid = rvb.is_valid;
-				opty.Score = rvb.Score;	
-			}
-			else if(rvb.Score < rvs.Score)
+			opty.EntryPrice = lastCandle.close;
+			
+			if(opty.TradeType==TradeType.BUY)
 			{
-				opty = new Opportunity();
-				opty.MKT = stock.MKT;
-				opty.Symbol = stock.SYMBOL;
-				opty.TradeType = TradeType.SELL;
-				opty.TimeStamp = lastCandle.timeStamp;
-				
-				opty.EntryPrice = lastCandle.close;
-				opty.ExitPrice = opty.EntryPrice*(1-0.001);
-				opty.StopLoss = opty.EntryPrice*(1+0.02);
-				
-				opty.MA = rvs.is_MA_GoAhead;
-				opty.MOM = rvs.is_MOM_GoAhead;
-				opty.MACD = rvs.is_MACD_GoAhead;
-				opty.PVT = rvs.is_PVT_GoAhead;
-				opty.is_valid = rvs.is_valid;
-				opty.Score = rvs.Score;
+				opty.ExitPrice = opty.EntryPrice*(1+0.001);
+				opty.StopLoss = opty.EntryPrice*(1-0.01);
 			}
+			else if(opty.TradeType==TradeType.SELL)
+			{
+				opty.ExitPrice = opty.EntryPrice*(1-0.001);
+				opty.StopLoss = opty.EntryPrice*(1+0.01);
+			}
+			opty.MA = rv.is_MA_GoAhead;
+			opty.MOM = rv.is_MOM_GoAhead;
+			opty.MACD = rv.is_MACD_GoAhead;
+			opty.PVT = rv.is_PVT_GoAhead;
+			opty.is_valid = rv.is_valid;
+			opty.Score = rv.Score;	
 		}
 		return opty;
 	}
@@ -183,10 +180,10 @@ public class CandleTrendWorker implements Runnable{
 				{
 					HistoricalDataEx nowCandle = subList.get(2);
 					
-					//double slope = getSlope(historicalData);
+					double slope = getSlope(subList);
 					
 					opty.LastCandleClose = nowCandle.close;
-					//opty.Slope = slope;
+					opty.Slope = slope;
 					
 					if(opty.is_valid)
 					{
@@ -286,42 +283,14 @@ public class CandleTrendWorker implements Runnable{
 		return candles5Min;
 	}
 
-	private double getSlope(ArrayList<HistoricalDataEx> historicalData) {
+	private double getSlope(List<HistoricalDataEx> subList) {
 		Hashtable<Integer,Double> points = new Hashtable<Integer,Double>();
 		int i = 0 ;
-		List<HistoricalDataEx> subList = new ArrayList<HistoricalDataEx>();
-		
-		if(historicalData.size()>=60)
-		{
-			subList =  historicalData.subList(historicalData.size()-60, historicalData.size());	
-		}		
 		
 		for (HistoricalDataEx candle : subList) 
 		{
-			try {
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				java.util.Date recoTime = simpleDateFormat.parse(candle.timeStamp);
-				LocalDateTime localDateTime = recoTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-				
-				String today = util.getTodayYYMMDD();
-				LocalDateTime startTime = LocalDateTime.parse(today + "T09:15:00");
-				
-				LocalDateTime endTime = LocalDateTime.parse(today + "T14:30:00");
-				
-				if(localDateTime.isAfter(startTime) && localDateTime.isBefore(endTime))
-				{
-					points.put(i, candle.MovingAvg);
-					i++;
-				}
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-		}
-		if(i < 2)
-		{
-			return -1000;
+			points.put(i, candle.close);
+			i++;
 		}
 		
 		double slope = getSlope(points);

@@ -509,12 +509,13 @@ public class DAO
 	public void updateOptyPicked(Opportunity opty, Order order) {
 		try {
 			Connection conn = getConnection();
-			String query = " update stock_chart_prediction_ha set IS_TRADED=1, ENTRY_PRICE=? where ID=?";
+			String query = " update stock_chart_prediction_ha set IS_TRADED=1, ENTRY_PRICE=?, ORDER_ID=? where ID=?";
 
 			PreparedStatement preparedStmt = conn.prepareStatement(query);
 			
 			preparedStmt.setDouble(1, Double.parseDouble(order.averagePrice));
-			preparedStmt.setInt(2, opty.ID);
+			preparedStmt.setString(2, order.orderId);
+			preparedStmt.setInt(3, opty.ID);
 			
 			preparedStmt.execute();
 			

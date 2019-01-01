@@ -44,7 +44,7 @@ public class Util
 		}
 		if(TradingDays==null)
 		{
-			TradingDays = getTradingDays(2018, "NSE");
+			TradingDays = getTradingDays(2019, "NSE");
 		}
 	}
 	public float getGSXNifty() {
@@ -254,7 +254,7 @@ public class Util
 		String today = getTodayYYMMDD();
 		
 		if (now.isAfter(LocalDateTime.parse(today + "T09:15:00"))
-				&& now.isBefore(LocalDateTime.parse(today + "T14:50:00")))
+				&& now.isBefore(LocalDateTime.parse(today + "T13:30:00")))
 		{
 			return true;
 		}

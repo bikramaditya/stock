@@ -42,7 +42,7 @@ public class TradeExecutorV2 {
 			try {
 				kite = new Kite();
 				double totalCashToday =  kite.getMargins();
-				sliceCashToday = totalCashToday/5;
+				sliceCashToday = totalCashToday/10;
 			} catch (Exception | KiteException e) {
 				e.printStackTrace();
 				Util.Logger.log(1,e.getMessage());
@@ -53,7 +53,7 @@ public class TradeExecutorV2 {
 		{
 			dao = new DAO();
 			
-			System.out.print("Starting all threads - "+new Date());
+			//System.out.print("Starting all threads - "+new Date());
 	        Util.Logger.log(0, "Starting all threads - "+new Date());
 	        
 			ArrayList<Opportunity> watchList = dao.getFreshOpportunityList("NSE");	
@@ -63,6 +63,7 @@ public class TradeExecutorV2 {
 				for (Opportunity opty : watchList) {
 					MyOrder myOrder = new MyOrder(kite,opty,sliceCashToday);
 					Order order = myOrder.execute();
+					
 					dao.updateOptyPicked(opty,order);
 				}
 				
@@ -71,8 +72,8 @@ public class TradeExecutorV2 {
 			}
 			else
 			{
-				System.out.print("--size 0, no mail sent "+new Date()+"\n\n");
-		        Util.Logger.log(0, "--size 0, no mail sent "+new Date());	
+				//System.out.print("--size 0, no mail sent "+new Date()+"\n\n");
+		        Util.Logger.log(0, "--size 0, no order sent "+new Date());	
 			}
 	        
 	        isMarketOpen = util.isMarketOpen();

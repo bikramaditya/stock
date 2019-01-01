@@ -482,7 +482,8 @@ public class DAO
 
 	public ArrayList<Stock> getFreshDataWatchList(String MKT) {
 		ArrayList<Stock> watchList = new ArrayList<Stock>();
-		String query = "SELECT * FROM stock_watch_list where IS_ACTIVE=1 and IS_FRESH_DATA=1 and instrument_token is not null ";
+		String query = "SELECT * FROM stock_watch_list where IS_ACTIVE=1 and IS_FRESH_DATA=1 and instrument_token is not null\r\n" + 
+				"and symbol not in (SELECT distinct(symbol) FROM stock1.stock_chart_prediction_ha where date(trade_date)=CURDATE() and is_valid=1 and IS_TRADED=1 and MKT='"+MKT+"')";
 		Connection conn = getConnection();
 		try {
 			Statement st = conn.createStatement();

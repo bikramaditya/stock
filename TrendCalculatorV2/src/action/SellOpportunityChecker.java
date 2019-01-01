@@ -41,7 +41,7 @@ public class SellOpportunityChecker {
 		}
 		
 		RulesValidation rv = new RulesValidation();
-
+		rv.tradeType = TradeType.SELL;
 		rv.is_MOM_GoAhead = is_MOM_GoAhead;
 		rv.is_MACD_GoAhead = is_MACD_GoAhead;
 		rv.is_PVT_GoAhead = is_PVT_GoAhead;
@@ -77,16 +77,14 @@ public class SellOpportunityChecker {
 		double diff1 = lastMinus1.MACD - lastMinus1.Signal;
 		double diff2 = lastMinus2.MACD - lastMinus2.Signal;
 		
-		if(lastCandle.MACD < lastMinus1.MACD)
+		if(diff2 > diff1 && diff1 > diff0)
 		{
-			if( diff0 < 0.1)
+			double abs =(Math.abs(diff0)+Math.abs(diff1)+Math.abs(diff2)); 
+			if(abs > 0.35)
 			{
-				if((Math.abs(diff0)+Math.abs(diff1)+Math.abs(diff2)) > 0.5)
-				{
-					is_MACD_GoAhead = diff0;	
-				}
+				is_MACD_GoAhead = abs;
 			}
-		}		
+		}			
 		return Math.abs(is_MACD_GoAhead);
 	}
 
@@ -137,15 +135,15 @@ public class SellOpportunityChecker {
 					((lastCandle.HA.Close + lastCandle.HA.Open)/2));
 			double ratio = Math.abs(bottom/top);
 			
-			if(("2018-12-28 13:23:00".equals(lastCandle.timeStamp)) || ("2018-12-28 12:12:00".equals(lastCandle.timeStamp)))
+			if(("2018-12-31 10:52:00".equals(lastCandle.timeStamp)) || ("2018-12-28 12:12:00".equals(lastCandle.timeStamp)))
 			{
 				System.out.println();
 			}
 			if(top==0 
 					|| ratio==Double.POSITIVE_INFINITY 
-					|| ratio==Double.NEGATIVE_INFINITY || ratio > 1 )
+					|| ratio==Double.NEGATIVE_INFINITY || ratio > 1 || top <0)
 			{
-				if(height > 0.04)
+				if(height > 0.03)
 				{
 					is_HA_GoAhead = 1;	
 				}
