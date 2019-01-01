@@ -17,4 +17,5 @@
 <fullyQualifiedTypeName name="com.zerodhatech.models.Order"/>
 <fullyQualifiedTypeName name="java.lang.Double"/>
 <fullyQualifiedTypeName name="entity.TradeType"/>
+<fullyQualifiedTypeName name="action.TradeStatusV2"/>
 </qualifiedTypeNameHistroy>

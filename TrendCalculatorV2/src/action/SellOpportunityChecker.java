@@ -73,19 +73,20 @@ public class SellOpportunityChecker {
 
 	private double is_MACD_GoAhead(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) {
 		double is_MACD_GoAhead = 0;
-		double diff0 = lastCandle.MACD - lastCandle.Signal;
-		double diff1 = lastMinus1.MACD - lastMinus1.Signal;
-		double diff2 = lastMinus2.MACD - lastMinus2.Signal;
+		double diff0 = Math.abs(lastCandle.MACD - lastCandle.Signal);
+		double diff1 = Math.abs(lastMinus1.MACD - lastMinus1.Signal);
+		double diff2 = Math.abs(lastMinus2.MACD - lastMinus2.Signal);
 		
 		if(diff2 > diff1 && diff1 > diff0)
 		{
-			double abs =(Math.abs(diff0)+Math.abs(diff1)+Math.abs(diff2)); 
+			double abs = diff0+diff1+diff2;
+			
 			if(abs > 0.35)
 			{
 				is_MACD_GoAhead = abs;
 			}
 		}			
-		return Math.abs(is_MACD_GoAhead);
+		return is_MACD_GoAhead;
 	}
 
 	private double is_MOM_GoAhead(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) 
