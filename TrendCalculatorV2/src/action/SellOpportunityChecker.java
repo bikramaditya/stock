@@ -17,6 +17,13 @@ public class SellOpportunityChecker {
 	}
 	public RulesValidation checkAllRules(float upDown)
 	{
+
+		if(("2019-01-01 09:21:00".equals(lastCandle.timeStamp)) || ("2019-01-01 09:50:00".equals(lastCandle.timeStamp)))
+		{
+			System.out.println();
+		}
+		
+		
 		boolean is_valid = false;
 		
 		double is_HA_GoAhead = is_HA_GoAhead(lastMinus2, lastMinus1,lastCandle);
@@ -78,26 +85,25 @@ public class SellOpportunityChecker {
 		double diff2 = Math.abs(lastMinus2.MACD - lastMinus2.Signal);
 		
 		
-		if(diff2 > diff1 && diff1 > diff0)
+		if(lastCandle.MACD < lastCandle.Signal)
 		{
-			double abs = diff0+diff1+diff2;
-			
-			if(abs > 0.5)
+			if(lastMinus1.MACD > lastMinus1.Signal || lastMinus2.MACD > lastMinus2.Signal)
 			{
-				is_MACD_GoAhead = abs;
+				double abs = diff0+diff1+diff2;
+				
+				if(abs > 0.5)
+				{
+					is_MACD_GoAhead = abs;
+				}		
 			}
-		}			
+		}
+		
 		return is_MACD_GoAhead;
 	}
 
 	private double is_MOM_GoAhead(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) 
 	{
-//
-//		if(("2019-01-01 10:23:00".equals(lastCandle.timeStamp)) || ("2019-01-01 09:50:00".equals(lastCandle.timeStamp)))
-//		{
-//			System.out.println();
-//		}
-//		
+
 		double is_MOM_GoAhead = 0;
 		//Is MOM falling
 		if(lastMinus2.MoM > lastMinus1.MoM && lastMinus1.MoM > lastCandle.MoM)

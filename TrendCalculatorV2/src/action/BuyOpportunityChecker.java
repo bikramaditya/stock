@@ -78,15 +78,19 @@ public class BuyOpportunityChecker
 		double diff1 = Math.abs(lastMinus1.MACD - lastMinus1.Signal);
 		double diff2 = Math.abs(lastMinus2.MACD - lastMinus2.Signal);
 		
-		if(diff2 > diff1 && diff1 > diff0)
+		if(lastCandle.MACD > lastCandle.Signal)
 		{
-			double abs = diff0+diff1+diff2;
-			
-			if(abs > 0.5)
+			if(lastMinus1.MACD < lastMinus1.Signal || lastMinus2.MACD < lastMinus2.Signal)
 			{
-				is_MACD_GoAhead = abs;
+				double abs = diff0+diff1+diff2;
+				
+				if(abs > 0.5)
+				{
+					is_MACD_GoAhead = abs;
+				}		
 			}
-		}			
+		}
+		
 		return is_MACD_GoAhead;
 	}
 

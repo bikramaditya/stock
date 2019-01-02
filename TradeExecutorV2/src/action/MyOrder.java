@@ -43,18 +43,16 @@ public class MyOrder {
 			orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
 			double price = 0.0;
 			if (("BUY").equals(opty.TradeType)) 
-			{
-				
-				price = opty.EntryPrice * (1.0002);
+			{				
+				price = opty.EntryPrice * (1.0001);
 				price = round(price, 2);
 				price = Math.round(price * 20) / 20.0;
 				orderParams.price = price;
 
 				orderParams.transactionType = Constants.TRANSACTION_TYPE_BUY;
 			} else if (("SELL").equals(opty.TradeType)) 
-			{
-				
-				price = opty.EntryPrice * (1 - 0.0002);
+			{				
+				price = opty.EntryPrice * (1 - 0.0001);
 
 				price = round(price, 2);
 				price = Math.round(price * 20) / 20.0;
@@ -64,12 +62,12 @@ public class MyOrder {
 			}
 			orderParams.tradingsymbol = opty.Symbol;
 			orderParams.trailingStoploss = 0.0;
-			orderParams.stoploss = 0.01 * opty.EntryPrice;
+			orderParams.stoploss = 0.002 * opty.EntryPrice;
 			orderParams.product = Constants.PRODUCT_MIS;
 			orderParams.exchange = Constants.EXCHANGE_NSE;
 			orderParams.validity = Constants.VALIDITY_DAY;
 
-			orderParams.squareoff = 0.001 * opty.EntryPrice;
+			orderParams.squareoff = 0.0015 * opty.EntryPrice;
 
 			order = kite.placeOrder(orderParams, Constants.VARIETY_BO);
 			if(order.averagePrice==null || order.averagePrice.length()==0)
