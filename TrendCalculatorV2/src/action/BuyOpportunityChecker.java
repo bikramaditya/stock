@@ -6,18 +6,25 @@ import entity.TradeType;
 
 public class BuyOpportunityChecker 
 {
+	HistoricalDataEx lastMinus3;
 	HistoricalDataEx lastMinus2;
 	HistoricalDataEx lastMinus1; 
 	HistoricalDataEx lastCandle;
 
-	public BuyOpportunityChecker(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle)
+	public BuyOpportunityChecker(HistoricalDataEx lastMinus3,HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle)
 	{
+		this.lastMinus3 = lastMinus3;
 		this.lastMinus2 = lastMinus2;
 		this.lastMinus1 = lastMinus1; 
 		this.lastCandle = lastCandle;
 	}
 	public RulesValidation checkAllRules(float upDown)
 	{
+		if(("2019-01-02 11:08:00".equals(lastCandle.timeStamp)) || ("2018-12-28 12:12:00".equals(lastCandle.timeStamp)))
+		{
+			System.out.println();
+		}
+		
 		boolean is_valid = false;
 		
 		double is_HA_GoAhead = is_HA_GoAhead(lastMinus2, lastMinus1,lastCandle);
@@ -28,14 +35,14 @@ public class BuyOpportunityChecker
 		
 		if(upDown > 0)
 		{
-			if(is_MOM_GoAhead >= 15 && is_MACD_GoAhead > 0.1 && is_PVT_GoAhead > 1 && is_HA_GoAhead > 0)
+			if(is_MOM_GoAhead >= 15 && is_MACD_GoAhead > 0 && is_PVT_GoAhead > 1 && is_HA_GoAhead > 0)
 			{
 				is_valid = true;
 			}	
 		}
 		else
 		{
-			if(is_MOM_GoAhead >= 10 && is_MACD_GoAhead > 0.01 && is_PVT_GoAhead > 1 && is_HA_GoAhead > 0)
+			if(is_MOM_GoAhead >= 10 && is_MACD_GoAhead > 0 && is_PVT_GoAhead > 1 && is_HA_GoAhead > 0)
 			{
 				is_valid = true;
 			}
@@ -77,19 +84,26 @@ public class BuyOpportunityChecker
 		double diff0 = Math.abs(lastCandle.MACD - lastCandle.Signal);
 		double diff1 = Math.abs(lastMinus1.MACD - lastMinus1.Signal);
 		double diff2 = Math.abs(lastMinus2.MACD - lastMinus2.Signal);
+		double diff3 = Math.abs(lastMinus3.MACD - lastMinus3.Signal);
 		
-		if(lastCandle.MACD > lastCandle.Signal)
+		double pre2 = lastMinus2.MACD-lastMinus2.Signal;
+		double pre1 = lastMinus1.MACD-lastMinus1.Signal;
+		double curr = lastCandle.MACD-lastCandle.Signal;
+		
+		if(curr >= -0.05)
 		{
-			if(lastMinus1.MACD < lastMinus1.Signal || lastMinus2.MACD < lastMinus2.Signal)
+			if(pre1 <= 0 || pre2 < 0)
 			{
-				double abs = diff0+diff1+diff2;
-				
-				if(abs > 0.5)
+				//if(diff2 > diff0 || diff1 > diff0)
 				{
-					is_MACD_GoAhead = abs;
-				}		
+					double abs = diff0+diff1+diff2+diff3;
+					if(abs > 0.1)
+					is_MACD_GoAhead = abs;		
+				}
 			}
 		}
+		
+		
 		
 		return is_MACD_GoAhead;
 	}
@@ -98,7 +112,7 @@ public class BuyOpportunityChecker
 	{
 		double is_MOM_GoAhead = 0;
 		//Is MOM rising
-		if(lastMinus2.MoM < lastMinus1.MoM && lastMinus1.MoM < lastCandle.MoM)
+		if(lastMinus3.MoM < lastMinus2.MoM || lastMinus2.MoM < lastMinus1.MoM)
 		{
 			is_MOM_GoAhead = 100*(lastCandle.MoM - lastMinus1.MoM)/((lastCandle.MoM+lastMinus1.MoM)/2);
 		}
@@ -141,10 +155,6 @@ public class BuyOpportunityChecker
 					((lastCandle.HA.Close + lastCandle.HA.Open)/2));
 			double ratio = Math.abs(top/bottom);
 			
-			if(("2018-12-31 10:06:00".equals(lastCandle.timeStamp)) || ("2018-12-28 12:12:00".equals(lastCandle.timeStamp)))
-			{
-				System.out.println();
-			}
 			if(top==0 
 					|| ratio==Double.POSITIVE_INFINITY 
 					|| ratio==Double.NEGATIVE_INFINITY || ratio > 1 || bottom < 0)

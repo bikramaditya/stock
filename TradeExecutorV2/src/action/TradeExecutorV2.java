@@ -42,7 +42,7 @@ public class TradeExecutorV2 {
 			try {
 				kite = new Kite();
 				double totalCashToday =  kite.getMargins();
-				sliceCashToday = totalCashToday/10;
+				sliceCashToday = totalCashToday/20;
 			} catch (Exception | KiteException e) {
 				e.printStackTrace();
 				Util.Logger.log(1,e.getMessage());

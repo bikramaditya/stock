@@ -488,7 +488,7 @@ public class DAO
 	{
 		ArrayList<Opportunity> watchList = new ArrayList<Opportunity>();
 		
-		String query = "SELECT * FROM stock_chart_prediction_ha where IS_VALID=1 and IS_TRADED=1 and MKT='"+MKT+"' and  trade_date > (NOW() - INTERVAL 20 MINUTE)";
+		String query = "SELECT * FROM stock_chart_prediction_ha where IS_VALID=1 and IS_TRADED=1 and MKT='"+MKT+"' and  trade_date > (NOW() - INTERVAL 15 MINUTE)";
 		Connection conn = getConnection();
 		try {
 			Statement st = conn.createStatement();

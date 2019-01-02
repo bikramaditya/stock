@@ -56,19 +56,19 @@ public class CandleTrendWorker implements Runnable{
 		Util.Logger.log(0,Thread.currentThread().getName() + " End.");
 	}
 
-	private RulesValidation checkBuyingOpportunity(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1,
+	private RulesValidation checkBuyingOpportunity(HistoricalDataEx lastMinus3,HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1,
 			HistoricalDataEx lastCandle) {
 
-		BuyOpportunityChecker checker = new BuyOpportunityChecker(lastMinus2, lastMinus1, lastCandle);
+		BuyOpportunityChecker checker = new BuyOpportunityChecker(lastMinus3,lastMinus2, lastMinus1, lastCandle);
 		
 		return  checker.checkAllRules(upDown);
 		
 	}
 	
-	private RulesValidation checkSellingOpportunity(HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1,
+	private RulesValidation checkSellingOpportunity(HistoricalDataEx lastMinus3, HistoricalDataEx lastMinus2, HistoricalDataEx lastMinus1,
 			HistoricalDataEx lastCandle) {
 		
-		SellOpportunityChecker checker = new SellOpportunityChecker(lastMinus2, lastMinus1, lastCandle);
+		SellOpportunityChecker checker = new SellOpportunityChecker(lastMinus3,lastMinus2, lastMinus1, lastCandle);
 		
 		return checker.checkAllRules(upDown);
 	}
@@ -79,28 +79,28 @@ public class CandleTrendWorker implements Runnable{
 		Opportunity opty = null;
 		
 		int size = historicalData.size();
-		if(size >= 3)
+		if(size >= 4)
 		{
-			for(int i = size-3; i < size; i++)
+			for(int i = size-4; i < size; i++)
 			{
 				last3Candles.add(historicalData.get(i));
 			}
 		}
 		historicalData = null;
 		
-		HistoricalDataEx lastMinus2 = last3Candles.get(0);
-		HistoricalDataEx lastMinus1 = last3Candles.get(1);
-		HistoricalDataEx lastCandle = last3Candles.get(2);
-		
+		HistoricalDataEx lastMinus3 = last3Candles.get(0);
+		HistoricalDataEx lastMinus2 = last3Candles.get(1);
+		HistoricalDataEx lastMinus1 = last3Candles.get(2);
+		HistoricalDataEx lastCandle = last3Candles.get(3);
 		RulesValidation rv = null;
 		
-		if(upDown > 0)
+		if(upDown > 0 && upDown < 0.8)
 		{
-			rv = checkBuyingOpportunity(lastMinus2,lastMinus1,lastCandle);	
+			rv = checkBuyingOpportunity(lastMinus3,lastMinus2,lastMinus1,lastCandle);	
 		}
-		else if (upDown < 0)
+		else if (upDown > -0.8 && upDown < 0)
 		{
-			rv = checkSellingOpportunity(lastMinus2,lastMinus1,lastCandle);
+			rv = checkSellingOpportunity(lastMinus3,lastMinus2,lastMinus1,lastCandle);
 		}
 		
 		
@@ -140,7 +140,7 @@ public class CandleTrendWorker implements Runnable{
 			//System.out.println("");
 			ArrayList<HistoricalDataEx> historicalData = dao.getHistoricalData(stock);//getHistoricalData(stock);//
 			
-			if(historicalData.size() < 30)
+			if(historicalData.size() < 400)
 			{
 				throw new Exception("Not enough data to plot trend");
 			}
@@ -164,12 +164,12 @@ public class CandleTrendWorker implements Runnable{
 			System.out.println("");
 			*/
 			
-			//for(int i = historicalData.size()-350; i <= historicalData.size();i++)
+			//for(int i = historicalData.size()-400; i <= historicalData.size();i++)
 			{
-				int start = historicalData.size()-3;
+				int start = historicalData.size()-4;
 				int end = historicalData.size();
 
-				//start = i-3;
+				//start = i-4;
 				//end = i;
 
 				List<HistoricalDataEx> subList =  historicalData.subList(start, end);
