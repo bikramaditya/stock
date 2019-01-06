@@ -5,6 +5,8 @@ import org.apache.log4j.DailyRollingFileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+
+import action.CandleDownloaderV2;
  
 public class CandleLogger {
  
@@ -24,14 +26,14 @@ public class CandleLogger {
     {
     	patternLayoutObj = new PatternLayout();
     	rollingAppenderObj = new DailyRollingFileAppender();
-    	rollingAppenderObj.setFile("C:\\Stock\\Logs\\CandleDownloaderV1.log");
+    	rollingAppenderObj.setFile("C:\\Stock\\Logs\\CandleDownloaderV2.log");
         rollingAppenderObj.setDatePattern("'.'yyyy-MM-dd");
         rollingAppenderObj.setLayout(patternLayoutObj);
         rollingAppenderObj.activateOptions();
         rootLoggerObj = Logger.getRootLogger();
         rootLoggerObj.setLevel(Level.DEBUG);
         rootLoggerObj.addAppender(rollingAppenderObj);
-        loggerObj = Logger.getLogger(CandleLogger.class);
+        loggerObj = Logger.getLogger(CandleDownloaderV2.class);
     }
     
     public void log(int severity, String message) {

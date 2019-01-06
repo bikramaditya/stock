@@ -260,7 +260,7 @@ public class Util
 		}
 		else
 		{
-			return false;
+			return true;
 		}
 	}
 	public String[] getAccessToken() 

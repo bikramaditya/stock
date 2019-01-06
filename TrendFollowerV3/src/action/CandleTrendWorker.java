@@ -14,6 +14,9 @@ import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.jfree.ui.RefineryUtilities;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DeliverCallback;
+
 import charts.StockChart;
 import entity.HistoricalDataEx;
 import entity.Opportunity;
@@ -30,9 +33,11 @@ public class CandleTrendWorker implements Runnable{
 	private DAO dao = null;
 	private Util util = null;
 	float upDown = 0f;
-	public CandleTrendWorker(Stock stock, Kite kite) throws Exception {
+	Channel channel;
+	public CandleTrendWorker(Channel channel, Stock stock, Kite kite) throws Exception {
 		this.stock = stock;
 		this.util = new Util();
+		this.channel = channel;
 	}
 	
 	public void run() {
@@ -42,10 +47,21 @@ public class CandleTrendWorker implements Runnable{
 		System.out.println(message);
 		
 		try {
-			
-			//upDown = util.getPercChange(this.stock.SYMBOL);
-			
-			processCommand();
+			String Q = stock.MKT+"-"+stock.SYMBOL;
+			channel.queueDeclare(Q, false, false, false, null);
+		    System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+		    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+		        String msg = new String(delivery.getBody(), "UTF-8");
+		        if(msg!=null && msg.equals(stock.SYMBOL+"Data Arrieved"))
+		        {
+		        	System.out.println(" Received '" + msg + "'");	
+		        	processCommand();
+		        }
+		        
+		    };
+		    channel.basicConsume(Q, true, deliverCallback, consumerTag -> { });
+		    
 			
 		} catch (Exception e) {
 			Util.Logger.log(1, e.getMessage());

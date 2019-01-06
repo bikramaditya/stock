@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Copy 2 elements to &apos;TrendCalculatorV1/src/uitls&apos;&#x0D;&#x0A;- Original project: &apos;CandleDownloaderV1&apos;&#x0D;&#x0A;- Destination element: &apos;TrendCalculatorV1/src/uitls&apos;&#x0D;&#x0A;- Original elements:&#x0D;&#x0A;     uitls.ZerodhaConnect.java&#x0D;&#x0A;     uitls.Kite.java" description="Copy compilation units" destination="=TrendCalculatorV1/src&lt;uitls" element1="/src&lt;uitls{ZerodhaConnect.java" element2="/src&lt;uitls{Kite.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1545039060416" units="2" version="1.0"/>
-</session>

@@ -11,7 +11,7 @@ public class EmitLog {
     	ConnectionFactory factory = new ConnectionFactory();
     	factory.setHost("localhost");
     	Connection connection = factory.newConnection();
-    			
+
 		for(int i = 0 ; i < 10; i++)
 		{
 			Channel channel = connection.createChannel();

@@ -5,6 +5,10 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
 import entity.Stock;
 import uitls.DAO;
 import uitls.Kite;
@@ -39,25 +43,27 @@ public class TrendFollowerV3 {
 		
 		Kite kite = new Kite();
 		
-		while (isTradingDay && isMarketOpen || true)
+		ConnectionFactory factory = new ConnectionFactory();
+    	factory.setHost("localhost");
+    	Connection connection = factory.newConnection();
+    	Channel channel = connection.createChannel();
+		
+    	ArrayList<Stock> watchList = dao.getWatchList();
+    	
+		if (isTradingDay && isMarketOpen || true)
 		{	
 			System.out.println("Starting all threads - "+new Date());
 	        Util.Logger.log(0, "Starting all threads - "+new Date());
 	        
-			ArrayList<Stock> watchList = dao.getFreshDataWatchList("NSE");
-			
 			if(watchList.size() > 0)
 			{
-				ExecutorService executor = Executors.newFixedThreadPool(2);
-				
 				for (Stock stock : watchList) {
-					Runnable worker;
+					
 					try {
-						if(stock.SYMBOL.equals("ONGC"))
+						//if(stock.SYMBOL.equals("ONGC"))
 						{
-							worker = new CandleTrendWorker(stock,kite);
-							executor.execute(worker);
-				            Thread.sleep(300000000);
+							Runnable worker = new CandleTrendWorker(channel,stock,kite);
+							worker.run();
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -65,24 +71,23 @@ public class TrendFollowerV3 {
 					}
 				}
 	        
-				executor.shutdown();
-		        while (!executor.isTerminated()) {
-		        	Thread.sleep(200);
-		        }
-		        
 		        //dao.updateWatchListAnalysisEnd("NSE");							
 			}
 	        
-	        System.out.print("--Finished all threads"+new Date()+"\n\n");
-	        Util.Logger.log(0, "Finished all threads"+new Date());	
+	        System.out.print("--running all threads"+new Date()+"\n\n");
+	        Util.Logger.log(0, "running all threads"+new Date());	
 	        
-	        isMarketOpen = util.isMarketOpen();
-	        
-	        Thread.sleep(1000);
 		}
-		
+		while(isMarketOpen)
+        {
+        	isMarketOpen = util.isMarketOpen();
+	        
+	        Thread.sleep(1000);	
+        }
 		System.out.println("isTradingDay && isMarketOpen"+isTradingDay +"-"+ isMarketOpen);
         Util.Logger.log(0, "isTradingDay && isMarketOpen"+isTradingDay +"-"+ isMarketOpen);
+     
+        System.exit(0);
 	}
 
 	/*
