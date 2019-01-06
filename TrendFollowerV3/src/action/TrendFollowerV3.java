@@ -50,7 +50,7 @@ public class TrendFollowerV3 {
 		
     	ArrayList<Stock> watchList = dao.getWatchList();
     	
-		if (isTradingDay && isMarketOpen || true)
+		if (isTradingDay && isMarketOpen)
 		{	
 			System.out.println("Starting all threads - "+new Date());
 	        Util.Logger.log(0, "Starting all threads - "+new Date());

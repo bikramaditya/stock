@@ -49,13 +49,13 @@ public class CandleTrendWorker implements Runnable{
 		try {
 			String Q = stock.MKT+"-"+stock.SYMBOL;
 			channel.queueDeclare(Q, false, false, false, null);
-		    System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+		    System.out.println(Q+"Waiting for messages.");
 
 		    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 		        String msg = new String(delivery.getBody(), "UTF-8");
 		        if(msg!=null && msg.equals(stock.SYMBOL+"Data Arrieved"))
 		        {
-		        	System.out.println(" Received '" + msg + "'");	
+		        	System.out.println(" Received '" + msg + "'");
 		        	processCommand();
 		        }
 		        
@@ -189,53 +189,84 @@ public class CandleTrendWorker implements Runnable{
 				//start = i-4;
 				//end = i;
 
-				//List<HistoricalDataEx> subList =  historicalData.subList(start, end);
+				double factor = Math.abs(400/historicalData.get(i).high);
 				
-				//double MACD = historicalData.get(i).MACD;
-				//MACD = Math.round(MACD * 1000.0) / 1000.0;
-				
-				
-				double diffNow = Math.abs(historicalData.get(i).Signal - historicalData.get(i).MACD);
-				double diffPre1 = Math.abs(historicalData.get(i-1).Signal - historicalData.get(i-1).MACD);
-				double diffPre2 = Math.abs(historicalData.get(i-2).Signal - historicalData.get(i-2).MACD);
+				double diffNow = factor * Math.abs(historicalData.get(i).Signal - historicalData.get(i).MACD);
+				double diffPre1 = factor * Math.abs(historicalData.get(i-1).Signal - historicalData.get(i-1).MACD);
+				double diffPre2 = factor * Math.abs(historicalData.get(i-2).Signal - historicalData.get(i-2).MACD);
 				
 				ghada += diffNow;
 				
 				System.out.println(historicalData.get(i).timeStamp+" | "+diffPre2 +" | "+diffPre1+" | "+diffNow+" - "+sign+"--ghada="+ghada);
-				
-				if(historicalData.get(i).timeStamp.contains("2019-01-04 14:17:00"))
+				Util.Logger.log(0, historicalData.get(i).timeStamp+" | "+diffPre2 +" | "+diffPre1+" | "+diffNow+" - "+sign+"--ghada="+ghada);
+				if(historicalData.get(i).timeStamp.contains("2019-01-04 09:25:00"))
 				{
 					System.out.println();
 				}
 				
-				if(diffPre2 > diffPre1 && diffPre1 > diffNow &&  diffNow <= 0.1)
+				if(diffPre2 > diffPre1 && diffPre1 > diffNow &&  diffNow <= 0.15)
 				{
-					if(historicalData.get(i).Signal < historicalData.get(i).MACD)
+					if(historicalData.get(i).Signal < historicalData.get(i).MACD 
+							&& historicalData.get(i-1).Signal < historicalData.get(i-1).MACD
+							&& historicalData.get(i-2).Signal < historicalData.get(i-2).MACD)
 					{
-						if(historicalData.get(i).MACD < historicalData.get(i-1).MACD)
-						//if(!sign.equals("Sign Change Down"))
+						if(ghada>1)
 						{
-							if(ghada>1)
+							boolean orderNow = false;
+							if(historicalData.size()==i+1)
 							{
-								sign = "Sign Change Down";
-								System.out.println(historicalData.get(i).timeStamp+"--SELL Now-------------ghada="+ghada);
-								ghada = 0;	
+								orderNow = true;
+								Opportunity opty = new Opportunity();
+								opty.MKT = stock.MKT;
+								opty.Symbol = stock.SYMBOL;
+								opty.TradeType = TradeType.SELL;
+								opty.TimeStamp = historicalData.get(i).timeStamp;
+								
+								opty.EntryPrice = historicalData.get(i).close;
+								opty.ExitPrice = opty.EntryPrice*(1+0.003);
+								opty.StopLoss = opty.EntryPrice*(1-0.01);
+								
+								opty.is_valid = true;								
+								storeOpportunity(opty);
 							}
+							double delta =  100*(diffPre1 - diffNow)/((diffPre1+diffNow)/2);
+							sign = "Sign Change Down";
+							double sum = 10*ghada+delta;
+							System.out.println("OrderNow ="+orderNow+" at "+ historicalData.get(i).timeStamp+"--SELL Now--Delta="+delta+"--ghada="+ghada+" sum="+sum);
+							Util.Logger.log(0, "OrderNow ="+orderNow+" at "+ historicalData.get(i).timeStamp+"--SELL Now--Delta="+delta+"--ghada="+ghada+" sum="+sum);
 						}
 					}
-					else if(historicalData.get(i).Signal > historicalData.get(i).MACD)
+					else if(historicalData.get(i).Signal > historicalData.get(i).MACD 
+							&& historicalData.get(i-1).Signal > historicalData.get(i-1).MACD
+							&& historicalData.get(i-2).Signal > historicalData.get(i-2).MACD)
 					{
-						if(historicalData.get(i).MACD > historicalData.get(i-1).MACD)
-						//if(!sign.equals("Sign Change Up"))
+						if(ghada>1)
 						{
-							if(ghada>1)
+							boolean orderNow = false;
+							if(historicalData.size()==i+1)
 							{
-								sign = "Sign Change Up";
-								System.out.println(historicalData.get(i).timeStamp+"---BUY Now-------------ghada="+ghada);
-								ghada = 0;	
+								orderNow = true;	
+								Opportunity opty = new Opportunity();
+								opty.MKT = stock.MKT;
+								opty.Symbol = stock.SYMBOL;
+								opty.TradeType = TradeType.BUY;
+								opty.TimeStamp = historicalData.get(i).timeStamp;
+								
+								opty.EntryPrice = historicalData.get(i).close;
+								opty.ExitPrice = opty.EntryPrice*(1-0.003);
+								opty.StopLoss = opty.EntryPrice*(1+0.01);
+								
+								opty.is_valid = true;								
+								storeOpportunity(opty);
 							}
+							double delta =  100*(diffPre1 - diffNow)/((diffPre1+diffNow)/2);
+							sign = "Sign Change Up";
+							double sum = 10*ghada+delta;
+							System.out.println("OrderNow ="+orderNow+" at "+ historicalData.get(i).timeStamp+"---BUY Now--Delta="+delta+"--ghada="+ghada+" sum="+sum);
+							Util.Logger.log(0, "OrderNow ="+orderNow+" at "+ historicalData.get(i).timeStamp+"---BUY Now--Delta="+delta+"--ghada="+ghada+" sum="+sum);
 						}
 					}
+					ghada = 0;	
 				}
 				
 

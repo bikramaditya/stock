@@ -2,12 +2,16 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="QUEUE_NAME" key="selection"/>
+		<item value="checkForOpportunity" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="checkForOpportunity"/>
+			<item value="storeOpportunity"/>
+			<item value="log"/>
+			<item value="sign"/>
 			<item value="QUEUE_NAME"/>
 			<item value="amo"/>
 			<item value="trailingStoploss"/>
@@ -19,10 +23,6 @@
 			<item value="positions"/>
 			<item value="orders"/>
 			<item value="updateOptyPicked"/>
-			<item value="updown"/>
-			<item value="getSlope"/>
-			<item value="upd"/>
-			<item value="bracket"/>
 		</list>
 		<list key="replacehistory">
 		</list>

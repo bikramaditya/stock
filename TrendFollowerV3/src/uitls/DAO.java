@@ -509,7 +509,7 @@ public class DAO
 
 	public ArrayList<HistoricalDataEx> getHistoricalData(Stock stock) {
 		ArrayList<HistoricalDataEx> historicalData = new ArrayList<HistoricalDataEx>();
-		String query = "SELECT * FROM stock_candle_data_1min  where MKT='"+stock.MKT+"' and SYMBOL='"+stock.SYMBOL+"' order by TIMESTAMP desc limit 900";
+		String query = "SELECT * FROM stock_candle_data_1min  where MKT='"+stock.MKT+"' and SYMBOL='"+stock.SYMBOL+"' order by TIMESTAMP desc limit 1000";
 		Connection conn = getConnection();
 		try {
 			Statement st = conn.createStatement();

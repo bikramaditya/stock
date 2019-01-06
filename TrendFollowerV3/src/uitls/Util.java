@@ -225,8 +225,6 @@ public class Util
 		return tradingDays;
 	}
 	
-	
-	
 	public String getTodayYYMMDD() {
 	    java.util.Date today = new java.util.Date();
 	    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");  
@@ -253,14 +251,14 @@ public class Util
 		
 		String today = getTodayYYMMDD();
 		
-		if (now.isAfter(LocalDateTime.parse(today + "T09:15:00"))
-				&& now.isBefore(LocalDateTime.parse(today + "T14:30:00")))
+		if (now.isAfter(LocalDateTime.parse(today + "T09:05:00"))
+				&& now.isBefore(LocalDateTime.parse(today + "T13:30:00")))
 		{
 			return true;
 		}
 		else
 		{
-			return true;
+			return false;
 		}
 	}
 	public String[] getAccessToken() 

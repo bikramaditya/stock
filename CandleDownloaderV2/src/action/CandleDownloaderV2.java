@@ -33,7 +33,7 @@ public class CandleDownloaderV2 {
 		boolean isTradingDay = util.isTradingDay(today);
 		boolean isMarketOpen = util.isMarketOpen();
 
-		if (isTradingDay || true)
+		if (isTradingDay)
 		{
 			try 
 			{
@@ -47,7 +47,7 @@ public class CandleDownloaderV2 {
 		    	Connection connection = factory.newConnection();
 		    	Channel channel = connection.createChannel();
 				
-				while(isMarketOpen || true)
+				while(isMarketOpen)
 				{
 					int secs = LocalDateTime.now().getSecond();
 					
@@ -62,7 +62,7 @@ public class CandleDownloaderV2 {
 						for (Stock stock : watchList) {
 							Runnable worker = new DownloadWorker(channel,kite,stock,to);
 				            executor.execute(worker);
-				            Thread.sleep(500001);
+				            Thread.sleep(450);
 						}
 						
 						executor.shutdown();
