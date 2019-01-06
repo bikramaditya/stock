@@ -2,6 +2,8 @@ package action;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.models.Order;
@@ -42,7 +44,7 @@ public class TradeExecutorV2 {
 			try {
 				kite = new Kite();
 				double totalCashToday =  kite.getMargins();
-				sliceCashToday = totalCashToday/20;
+				sliceCashToday = totalCashToday/15;
 			} catch (Exception | KiteException e) {
 				e.printStackTrace();
 				Util.Logger.log(1,e.getMessage());
@@ -60,11 +62,12 @@ public class TradeExecutorV2 {
 			
 			if(watchList.size() > 0)
 			{
-				for (Opportunity opty : watchList) {
-					MyOrder myOrder = new MyOrder(kite,opty,sliceCashToday);
-					Order order = myOrder.execute();
-					
-					dao.updateOptyPicked(opty,order);
+				ExecutorService executor = Executors.newFixedThreadPool(2);
+				Runnable worker;
+				for (Opportunity opty : watchList) 
+				{
+					worker = new OrderWorker(kite,opty,sliceCashToday);
+					executor.execute(worker);
 				}
 				
 				System.out.print("--orders executed "+new Date()+"\n\n");
@@ -78,7 +81,7 @@ public class TradeExecutorV2 {
 	        
 	        isMarketOpen = util.isMarketOpen();
 	        
-	        Thread.sleep(1000);
+	        Thread.sleep(500);
 		}
 		
 		System.out.println("isTradingDay && isMarketOpen "+isTradingDay +"-"+ isMarketOpen);

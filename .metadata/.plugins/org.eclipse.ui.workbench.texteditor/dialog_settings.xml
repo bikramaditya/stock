@@ -2,13 +2,19 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="for" key="selection"/>
+		<item value="QUEUE_NAME" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="QUEUE_NAME"/>
+			<item value="amo"/>
+			<item value="trailingStoploss"/>
+			<item value="TATAMOTORS"/>
+			<item value="tatam"/>
 			<item value="for"/>
+			<item value="store"/>
 			<item value="position"/>
 			<item value="positions"/>
 			<item value="orders"/>
@@ -17,12 +23,6 @@
 			<item value="getSlope"/>
 			<item value="upd"/>
 			<item value="bracket"/>
-			<item value="margin"/>
-			<item value="order"/>
-			<item value="checkForOpportunity"/>
-			<item value="slope"/>
-			<item value="updateOptyQuote"/>
-			<item value="getHistoricalData"/>
 		</list>
 		<list key="replacehistory">
 		</list>
@@ -31,7 +31,7 @@
 		<item value="336" key="DIALOG_WIDTH"/>
 		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
 		<item value="454" key="DIALOG_HEIGHT"/>
-		<item value="838" key="DIALOG_X_ORIGIN"/>
-		<item value="451" key="DIALOG_Y_ORIGIN"/>
+		<item value="1298" key="DIALOG_X_ORIGIN"/>
+		<item value="165" key="DIALOG_Y_ORIGIN"/>
 	</section>
 </section>

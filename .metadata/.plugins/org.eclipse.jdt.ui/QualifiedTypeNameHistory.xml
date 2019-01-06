@@ -18,4 +18,9 @@
 <fullyQualifiedTypeName name="java.lang.Double"/>
 <fullyQualifiedTypeName name="entity.TradeType"/>
 <fullyQualifiedTypeName name="action.TradeStatusV2"/>
+<fullyQualifiedTypeName name="uitls.DAO"/>
+<fullyQualifiedTypeName name="action.PolynomialRegressionV1"/>
+<fullyQualifiedTypeName name="entity.Stock"/>
+<fullyQualifiedTypeName name="action.TrendFollowerV3"/>
+<fullyQualifiedTypeName name="com.rabbitmq.client.ConnectionFactory"/>
 </qualifiedTypeNameHistroy>

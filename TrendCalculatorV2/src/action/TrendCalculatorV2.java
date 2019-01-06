@@ -53,7 +53,7 @@ public class TrendCalculatorV2 {
 				for (Stock stock : watchList) {
 					Runnable worker;
 					try {
-						if(stock.SYMBOL.equals("ASIANPAINT"))
+						//if(stock.SYMBOL.equals("ICICIBANK"))
 						{
 							worker = new CandleTrendWorker(stock,kite);
 							executor.execute(worker);
