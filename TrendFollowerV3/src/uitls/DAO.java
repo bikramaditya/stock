@@ -553,4 +553,31 @@ public class DAO
 			e.printStackTrace();
 		}
 	}
+
+	public boolean CheckIfUnexecutedTradeExists(Stock stock) {
+				
+		boolean UnexecutedTradeExists = false;
+		
+		String query = "SELECT count(*) as orderCount FROM stock_chart_prediction_ha where date(trade_date)=CURDATE() and symbol='"+stock.SYMBOL+"' and is_valid=1 and is_traded!=2 and MKT='"+stock.MKT+"' ";
+		Connection conn = getConnection();
+		try {
+			Statement st = conn.createStatement();
+			ResultSet rs = st.executeQuery(query);
+
+			while (rs.next()) {
+				int cnt = rs.getInt("orderCount");
+				
+				if(cnt > 0)
+				{
+					UnexecutedTradeExists = true;
+				}
+			}
+			st.close();
+			releaseConnection(conn);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return UnexecutedTradeExists;
+	}
 }

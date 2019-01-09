@@ -487,8 +487,9 @@ public class DAO
 		}
 	}
 
-	public void updateFreshDataArrived(Stock stock) 
+	public int updateFreshDataArrived(Stock stock) 
 	{
+		int n =0;
 		try {
 
 			String query = "update stock_watch_list set IS_FRESH_DATA=1 where MKT=? and SYMBOL=?";
@@ -498,11 +499,12 @@ public class DAO
 			preparedStmt.setString(1, stock.MKT);
 			preparedStmt.setString(2, stock.SYMBOL);
 			
-			preparedStmt.execute();
+			n = preparedStmt.executeUpdate();
 			
 			releaseConnection(conn);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return n;
 	}
 }

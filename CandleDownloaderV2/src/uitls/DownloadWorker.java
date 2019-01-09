@@ -45,9 +45,12 @@ public class DownloadWorker implements Runnable{
 			if(historicalData.dataArrayList.size() > 0)
 			{
 				dao.insertToCandleTable(stock,historicalData.dataArrayList);
-				dao.updateFreshDataArrived(stock);
-				String message = stock.SYMBOL+"Data Arrieved";
-				channel.basicPublish("", Q, null, message.getBytes());
+				int n = dao.updateFreshDataArrived(stock);
+				if(n>0)
+				{
+					String message = stock.SYMBOL+"Data Arrieved";
+					channel.basicPublish("", Q, null, message.getBytes());	
+				}
 			}
 
 			System.out.println("");

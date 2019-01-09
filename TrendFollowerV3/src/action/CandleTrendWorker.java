@@ -11,6 +11,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.jfree.ui.RefineryUtilities;
@@ -35,6 +37,7 @@ public class CandleTrendWorker implements Runnable {
 	private Util util = null;
 	float upDown = 0f;
 	Channel channel;
+	private static ConcurrentHashMap<String,TradeType> sessionMap = new ConcurrentHashMap<String,TradeType>();
 
 	public CandleTrendWorker(Channel channel, Stock stock, Kite kite) throws Exception {
 		this.stock = stock;
@@ -52,12 +55,31 @@ public class CandleTrendWorker implements Runnable {
 
 		try {
 			String Q = stock.MKT + "-" + stock.SYMBOL;
+			
+			sessionMap.putIfAbsent(Q, TradeType.NONE);
+			
 			channel.queueDeclare(Q, false, false, false, null);
 			System.out.println(Q + "Waiting for messages.");
 
+			
 			DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 				String msg = new String(delivery.getBody(), "UTF-8");
-				if (msg != null && msg.equals(stock.SYMBOL + "Data Arrieved")) {
+				if (msg != null && msg.equals(stock.SYMBOL + "Data Arrieved")) 
+				{
+					/*
+					//Is last BO order executed completely
+					
+					boolean UnexecutedTradeExists = dao.CheckIfUnexecutedTradeExists(stock);
+					
+					if(UnexecutedTradeExists)
+					{
+						Util.Logger.log(0, "Unexecuted trade exists, skipping it");
+						System.out.println("Unexecuted trade exists, skipping it");
+						return;
+					}
+
+					//Is last BO order executed completely*/
+					
 					System.out.println(" Received '" + msg + "'");
 					ArrayList<HistoricalDataEx> historicalData1min = dao.getHistoricalData(stock);// 1 Min
 					ArrayList<HistoricalDataEx> historicalData15min = getHistoricalDataXMin(historicalData1min, 15);// 15													// Min
@@ -72,61 +94,93 @@ public class CandleTrendWorker implements Runnable {
 					Util.Logger.log(0, historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
 					System.out.println( historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
 					
-					if(sign15Min>0 && sign5Min>0 && sign3Min>0 && sign1Min>0)
-					{
-						int n = historicalData1min.size()-1;
-						
-						Opportunity opty = new Opportunity();
-						opty.MA = sign15Min;
-						opty.MOM = sign5Min;
-						opty.MACD = sign3Min;
-						opty.PVT = sign1Min;
+					double absSlope=Math.abs(sign15Min+sign5Min+sign3Min+sign1Min);
+					
+					if(absSlope>0.11)
+					{						
+						if(sign15Min>0 && sign5Min>0 && sign3Min>0 && sign1Min>0)
+						{
+							TradeType trade_type = sessionMap.get(Q);
+							
+							if(trade_type==TradeType.BUY)
+							{
+								Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
+								System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
+								return;
+							}
+							else
+							{
+								sessionMap.put(Q, TradeType.BUY);	
+							}
+							
+							int n = historicalData1min.size()-1;
+							
+							Opportunity opty = new Opportunity();
+							opty.MA = sign15Min;
+							opty.MOM = sign5Min;
+							opty.MACD = sign3Min;
+							opty.PVT = sign1Min;
+							opty.Slope = absSlope;
 
-						opty.MKT = stock.MKT;
-						opty.Symbol = stock.SYMBOL;
-						opty.TradeType = TradeType.BUY;
-						opty.TimeStamp = historicalData1min.get(n).timeStamp;
+							opty.MKT = stock.MKT;
+							opty.Symbol = stock.SYMBOL;
+							opty.TradeType = TradeType.BUY;
+							opty.TimeStamp = historicalData1min.get(n).timeStamp;
 
-						opty.EntryPrice = historicalData1min.get(n).close;
-						opty.ExitPrice = opty.EntryPrice * (1 + 0.003);
-						opty.StopLoss = opty.EntryPrice * (1 - 0.01);
+							opty.EntryPrice = historicalData1min.get(n).close;
+							opty.ExitPrice = opty.EntryPrice * (1 + 0.003);
+							opty.StopLoss = opty.EntryPrice * (1 - 0.01);
 
-						opty.is_valid = true;
+							opty.is_valid = true;
 
-						System.out.println(opty);
-						util.Logger.log(0, opty.toString());
-						
-						storeOpportunity(opty);
-						
-					}
-					else if(sign15Min<0 && sign5Min<0 && sign3Min<0 && sign1Min<0)
-					{
-						int n = historicalData1min.size()-1;
-						
-						Opportunity opty = new Opportunity();
-						opty.MA = sign15Min;
-						opty.MOM = sign5Min;
-						opty.MACD = sign3Min;
-						opty.PVT = sign1Min;
+							System.out.println(opty);
+							util.Logger.log(0, opty.toString());
+							
+							storeOpportunity(opty);
+							
+						}
+						else if(sign15Min<0 && sign5Min<0 && sign3Min<0 && sign1Min<0)
+						{
+							TradeType trade_type = sessionMap.get(Q);
+							
+							if(trade_type==TradeType.SELL)
+							{
+								Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
+								System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
+								return;
+							}
+							else
+							{
+								sessionMap.put(Q, TradeType.SELL);	
+							}
+							
+							int n = historicalData1min.size()-1;
+							
+							Opportunity opty = new Opportunity();
+							opty.MA = sign15Min;
+							opty.MOM = sign5Min;
+							opty.MACD = sign3Min;
+							opty.PVT = sign1Min;
+							opty.Slope = absSlope;
 
-						opty.MKT = stock.MKT;
-						opty.Symbol = stock.SYMBOL;
-						opty.TradeType = TradeType.SELL;
-						opty.TimeStamp = historicalData1min.get(n).timeStamp;
+							opty.MKT = stock.MKT;
+							opty.Symbol = stock.SYMBOL;
+							opty.TradeType = TradeType.SELL;
+							opty.TimeStamp = historicalData1min.get(n).timeStamp;
 
-						opty.EntryPrice = historicalData1min.get(n).close;
-						opty.ExitPrice = opty.EntryPrice * (1 - 0.003);
-						opty.StopLoss = opty.EntryPrice * (1 + 0.01);
+							opty.EntryPrice = historicalData1min.get(n).close;
+							opty.ExitPrice = opty.EntryPrice * (1 - 0.003);
+							opty.StopLoss = opty.EntryPrice * (1 + 0.01);
 
-						opty.is_valid = true;
-						
-						System.out.println(opty);
-						util.Logger.log(0, opty.toString());
-						
-						storeOpportunity(opty);
+							opty.is_valid = true;
+							
+							System.out.println(opty);
+							util.Logger.log(0, opty.toString());
+							
+							storeOpportunity(opty);
+						}
 					}
 				}
-
 			};
 			channel.basicConsume(Q, true, deliverCallback, consumerTag -> {
 			});

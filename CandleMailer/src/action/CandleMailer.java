@@ -63,7 +63,7 @@ public class CandleMailer {
 	        
 	        isMarketOpen = util.isMarketOpen();
 	        
-	        Thread.sleep(5000);
+	        Thread.sleep(300000);
 		}
 		//else
 		{
