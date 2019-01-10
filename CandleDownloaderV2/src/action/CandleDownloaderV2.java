@@ -69,9 +69,8 @@ public class CandleDownloaderV2 {
 				        while (!executor.isTerminated()) {
 				        	Thread.sleep(100);
 				        }
-				        
-				        isMarketOpen = util.isMarketOpen();
 					}
+					isMarketOpen = util.isMarketOpen();
 					Thread.sleep(1000);
 				}
 			}
@@ -84,6 +83,7 @@ public class CandleDownloaderV2 {
 			
 			System.out.println("Day Over"+new Date());
 	        Util.Logger.log(0, "Day Over"+new Date());
+	        System.exit(0);
 		}
 	}
 

@@ -1,5 +1,12 @@
 package action;
 
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -37,14 +44,61 @@ public class CandleTrendWorker implements Runnable {
 	private Util util = null;
 	float upDown = 0f;
 	Channel channel;
-	private static ConcurrentHashMap<String,TradeType> sessionMap = new ConcurrentHashMap<String,TradeType>();
-
+	private static ConcurrentHashMap<String,TradeType> sessionMap;
+	private static String sessionXML = "";
+	
 	public CandleTrendWorker(Channel channel, Stock stock, Kite kite) throws Exception {
 		this.stock = stock;
 		this.util = new Util();
 		this.channel = channel;
+		
+		String user_home = System.getProperty("user.home");
+		String today = util.getTodayYYMMDD();
+		sessionXML = user_home+"\\sessionMap_"+today+"_.xml";
+		
+		if(sessionMap==null)
+		{
+			sessionMap = readSerializedZML();	
+		}
+		
 	}
 
+	@SuppressWarnings("unchecked")
+	private ConcurrentHashMap<String, TradeType> readSerializedZML() 
+	{
+		ConcurrentHashMap<String,TradeType> sessionMap = new ConcurrentHashMap<String,TradeType>();
+		
+		XMLDecoder decoder=null;
+		try {
+			
+			decoder=new XMLDecoder(new BufferedInputStream(new FileInputStream(sessionXML)));
+			sessionMap = (ConcurrentHashMap<String, TradeType>)decoder.readObject();
+		} catch (FileNotFoundException e) {
+			System.out.println("ERROR: File xml not found");
+		}
+		if(sessionMap==null)
+		{
+			return new ConcurrentHashMap<String,TradeType>();
+		}
+		else
+		{
+			return sessionMap;
+		}		
+	}
+
+	private void writeSerializedXML()
+	{
+		XMLEncoder encoder=null;
+		try{
+
+		encoder=new XMLEncoder(new BufferedOutputStream(new FileOutputStream(sessionXML)));
+		}catch(FileNotFoundException fileNotFound){
+			System.out.println("ERROR: While Creating or Opening the File xml");
+		}
+		encoder.writeObject(sessionMap);
+		encoder.close();	
+	}
+	
 	public void run() {
 		String message = Thread.currentThread().getName() + " Start. Trend = " + stock;
 
@@ -60,7 +114,7 @@ public class CandleTrendWorker implements Runnable {
 			
 			channel.queueDeclare(Q, false, false, false, null);
 			System.out.println(Q + "Waiting for messages.");
-
+			writeSerializedXML();
 			
 			DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 				String msg = new String(delivery.getBody(), "UTF-8");
@@ -96,7 +150,7 @@ public class CandleTrendWorker implements Runnable {
 					
 					double absSlope=Math.abs(sign15Min+sign5Min+sign3Min+sign1Min);
 					
-					if(absSlope>0.11)
+					if(absSlope>0.38)
 					{						
 						if(sign15Min>0 && sign5Min>0 && sign3Min>0 && sign1Min>0)
 						{
@@ -111,6 +165,7 @@ public class CandleTrendWorker implements Runnable {
 							else
 							{
 								sessionMap.put(Q, TradeType.BUY);	
+								writeSerializedXML();
 							}
 							
 							int n = historicalData1min.size()-1;
@@ -127,9 +182,9 @@ public class CandleTrendWorker implements Runnable {
 							opty.TradeType = TradeType.BUY;
 							opty.TimeStamp = historicalData1min.get(n).timeStamp;
 
-							opty.EntryPrice = historicalData1min.get(n).close;
-							opty.ExitPrice = opty.EntryPrice * (1 + 0.003);
-							opty.StopLoss = opty.EntryPrice * (1 - 0.01);
+							opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
+							opty.ExitPrice = opty.EntryPrice * (1 + 0.025);
+							opty.StopLoss = opty.EntryPrice * (1 - 0.0075);
 
 							opty.is_valid = true;
 
@@ -152,6 +207,7 @@ public class CandleTrendWorker implements Runnable {
 							else
 							{
 								sessionMap.put(Q, TradeType.SELL);	
+								writeSerializedXML();
 							}
 							
 							int n = historicalData1min.size()-1;
@@ -168,9 +224,9 @@ public class CandleTrendWorker implements Runnable {
 							opty.TradeType = TradeType.SELL;
 							opty.TimeStamp = historicalData1min.get(n).timeStamp;
 
-							opty.EntryPrice = historicalData1min.get(n).close;
-							opty.ExitPrice = opty.EntryPrice * (1 - 0.003);
-							opty.StopLoss = opty.EntryPrice * (1 + 0.01);
+							opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
+							opty.ExitPrice = opty.EntryPrice * (1 - 0.0025);
+							opty.StopLoss = opty.EntryPrice * (1 + 0.0075);
 
 							opty.is_valid = true;
 							
@@ -550,7 +606,7 @@ public class CandleTrendWorker implements Runnable {
 
 	private double getSlope(Hashtable<Integer, Double> points) {
 		WeightedObservedPoints obs = new WeightedObservedPoints();
-		Enumeration e = points.keys();
+		Enumeration<Integer> e = points.keys();
 		int key;
 		while (e.hasMoreElements()) {
 			key = (int) e.nextElement();

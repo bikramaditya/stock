@@ -16,7 +16,6 @@
 <fullyQualifiedTypeName name="uitls.Util"/>
 <fullyQualifiedTypeName name="com.zerodhatech.models.Order"/>
 <fullyQualifiedTypeName name="java.lang.Double"/>
-<fullyQualifiedTypeName name="entity.TradeType"/>
 <fullyQualifiedTypeName name="action.TradeStatusV2"/>
 <fullyQualifiedTypeName name="uitls.DAO"/>
 <fullyQualifiedTypeName name="action.PolynomialRegressionV1"/>
@@ -26,4 +25,13 @@
 <fullyQualifiedTypeName name="action.CandleDownloaderV2"/>
 <fullyQualifiedTypeName name="java.lang.System"/>
 <fullyQualifiedTypeName name="java.util.Date"/>
+<fullyQualifiedTypeName name="java.util.concurrent.ConcurrentHashMap"/>
+<fullyQualifiedTypeName name="entity.TradeType"/>
+<fullyQualifiedTypeName name="java.beans.XMLEncoder"/>
+<fullyQualifiedTypeName name="java.io.FileOutputStream"/>
+<fullyQualifiedTypeName name="java.io.BufferedOutputStream"/>
+<fullyQualifiedTypeName name="java.io.FileInputStream"/>
+<fullyQualifiedTypeName name="java.beans.XMLDecoder"/>
+<fullyQualifiedTypeName name="java.io.BufferedInputStream"/>
+<fullyQualifiedTypeName name="java.io.FileNotFoundException"/>
 </qualifiedTypeNameHistroy>
