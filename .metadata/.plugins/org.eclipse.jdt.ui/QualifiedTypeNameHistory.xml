@@ -34,4 +34,6 @@
 <fullyQualifiedTypeName name="java.beans.XMLDecoder"/>
 <fullyQualifiedTypeName name="java.io.BufferedInputStream"/>
 <fullyQualifiedTypeName name="java.io.FileNotFoundException"/>
+<fullyQualifiedTypeName name="uitls.CandleComparatorDesc"/>
+<fullyQualifiedTypeName name="uitls.CandleComparatorAsc"/>
 </qualifiedTypeNameHistroy>

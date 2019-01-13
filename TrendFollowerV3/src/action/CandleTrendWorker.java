@@ -33,7 +33,8 @@ import entity.Opportunity;
 import entity.RulesValidation;
 import entity.Stock;
 import entity.TradeType;
-import uitls.CandleComparator;
+import uitls.CandleComparatorAsc;
+import uitls.CandleComparatorDesc;
 import uitls.DAO;
 import uitls.Kite;
 import uitls.Util;
@@ -140,101 +141,117 @@ public class CandleTrendWorker implements Runnable {
 					ArrayList<HistoricalDataEx> historicalData5min = getHistoricalDataXMin(historicalData1min, 5);// 5Min
 					ArrayList<HistoricalDataEx> historicalData3min = getHistoricalDataXMin(historicalData1min, 3);// 3Min
 
-					double sign15Min = processCommand(historicalData15min);
-					double sign5Min = processCommand(historicalData5min);
-					double sign3Min = processCommand(historicalData3min);
-					double sign1Min = processCommand(historicalData1min);
+					String today = util.getTodayYYMMDD();
+					String timestamp = historicalData1min.get(0).timeStamp;
 					
-					Util.Logger.log(0, historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
-					System.out.println( historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
-					
-					double absSlope=Math.abs(sign15Min+sign5Min+sign3Min+sign1Min);
-					
-					if(absSlope>0.38)
-					{						
-						if(sign15Min>0 && sign5Min>0 && sign3Min>0 && sign1Min>0)
-						{
-							TradeType trade_type = sessionMap.get(Q);
-							
-							if(trade_type==TradeType.BUY)
+					if(timestamp.contains(today))
+					{
+						double sign15Min = processCommand(historicalData15min);
+						double sign5Min = processCommand(historicalData5min);
+						double sign3Min = processCommand(historicalData3min);
+						double sign1Min = processCommand(historicalData1min);
+						
+						Util.Logger.log(0, historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
+						System.out.println( historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
+						
+						double absSlope=Math.abs(sign15Min+sign5Min+sign3Min+sign1Min);
+						
+						if(absSlope>0.15)
+						{						
+							if(sign15Min>0 && sign5Min>0 && sign3Min>0 && sign1Min>0)
 							{
-								Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
-								System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
-								return;
+								boolean is_buy = is_BUY_HA_GoAhead(historicalData1min);
+								
+								if(is_buy)
+								{
+									TradeType trade_type = sessionMap.get(Q);
+									
+									if(trade_type==TradeType.BUY)
+									{
+										Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
+										System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
+										return;
+									}
+									else
+									{
+										sessionMap.put(Q, TradeType.BUY);	
+										writeSerializedXML();
+									}
+									
+									Opportunity opty = new Opportunity();
+									opty.MA = sign15Min;
+									opty.MOM = sign5Min;
+									opty.MACD = sign3Min;
+									opty.PVT = sign1Min;
+									opty.Slope = absSlope;
+
+									opty.MKT = stock.MKT;
+									opty.Symbol = stock.SYMBOL;
+									opty.TradeType = TradeType.BUY;
+									opty.TimeStamp = historicalData1min.get(0).timeStamp;
+
+									opty.EntryPrice = (historicalData1min.get(0).high+historicalData1min.get(0).low)/2;
+									opty.ExitPrice = opty.EntryPrice * (1 + 0.025);
+									opty.StopLoss = opty.EntryPrice * (1 - 0.0075);
+
+									opty.is_valid = true;
+
+									System.out.println(opty);
+									util.Logger.log(0, opty.toString());
+									
+									storeOpportunity(opty);
+								}
 							}
-							else
+							else if(sign15Min<0 && sign5Min<0 && sign3Min<0 && sign1Min<0)
 							{
-								sessionMap.put(Q, TradeType.BUY);	
-								writeSerializedXML();
+								boolean is_sell = is_SELL_HA_GoAhead(historicalData1min);
+								
+								if(is_sell)
+								{
+									TradeType trade_type = sessionMap.get(Q);
+									
+									if(trade_type==TradeType.SELL)
+									{
+										Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
+										System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
+										return;
+									}
+									else
+									{
+										sessionMap.put(Q, TradeType.SELL);	
+										writeSerializedXML();
+									}
+									
+									Opportunity opty = new Opportunity();
+									opty.MA = sign15Min;
+									opty.MOM = sign5Min;
+									opty.MACD = sign3Min;
+									opty.PVT = sign1Min;
+									opty.Slope = absSlope;
+
+									opty.MKT = stock.MKT;
+									opty.Symbol = stock.SYMBOL;
+									opty.TradeType = TradeType.SELL;
+									opty.TimeStamp = historicalData1min.get(0).timeStamp;
+
+									opty.EntryPrice = (historicalData1min.get(0).high+historicalData1min.get(0).low)/2;
+									opty.ExitPrice = opty.EntryPrice * (1 - 0.0025);
+									opty.StopLoss = opty.EntryPrice * (1 + 0.0075);
+
+									opty.is_valid = true;
+									
+									System.out.println(opty);
+									util.Logger.log(0, opty.toString());
+									
+									storeOpportunity(opty);	
+								}
 							}
-							
-							int n = historicalData1min.size()-1;
-							
-							Opportunity opty = new Opportunity();
-							opty.MA = sign15Min;
-							opty.MOM = sign5Min;
-							opty.MACD = sign3Min;
-							opty.PVT = sign1Min;
-							opty.Slope = absSlope;
-
-							opty.MKT = stock.MKT;
-							opty.Symbol = stock.SYMBOL;
-							opty.TradeType = TradeType.BUY;
-							opty.TimeStamp = historicalData1min.get(n).timeStamp;
-
-							opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
-							opty.ExitPrice = opty.EntryPrice * (1 + 0.025);
-							opty.StopLoss = opty.EntryPrice * (1 - 0.0075);
-
-							opty.is_valid = true;
-
-							System.out.println(opty);
-							util.Logger.log(0, opty.toString());
-							
-							storeOpportunity(opty);
-							
 						}
-						else if(sign15Min<0 && sign5Min<0 && sign3Min<0 && sign1Min<0)
-						{
-							TradeType trade_type = sessionMap.get(Q);
-							
-							if(trade_type==TradeType.SELL)
-							{
-								Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
-								System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
-								return;
-							}
-							else
-							{
-								sessionMap.put(Q, TradeType.SELL);	
-								writeSerializedXML();
-							}
-							
-							int n = historicalData1min.size()-1;
-							
-							Opportunity opty = new Opportunity();
-							opty.MA = sign15Min;
-							opty.MOM = sign5Min;
-							opty.MACD = sign3Min;
-							opty.PVT = sign1Min;
-							opty.Slope = absSlope;
-
-							opty.MKT = stock.MKT;
-							opty.Symbol = stock.SYMBOL;
-							opty.TradeType = TradeType.SELL;
-							opty.TimeStamp = historicalData1min.get(n).timeStamp;
-
-							opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
-							opty.ExitPrice = opty.EntryPrice * (1 - 0.0025);
-							opty.StopLoss = opty.EntryPrice * (1 + 0.0075);
-
-							opty.is_valid = true;
-							
-							System.out.println(opty);
-							util.Logger.log(0, opty.toString());
-							
-							storeOpportunity(opty);
-						}
+					}
+					else
+					{
+						Util.Logger.log(0, "Old data received");
+						System.out.println("Old data received");
 					}
 				}
 			};
@@ -250,6 +267,58 @@ public class CandleTrendWorker implements Runnable {
 		Util.Logger.log(0, Thread.currentThread().getName() + " End.");
 	}
 
+	private boolean is_BUY_HA_GoAhead(ArrayList<HistoricalDataEx> candles) 
+	{
+		HistoricalDataEx lastCandle = candles.get(0);
+		
+		boolean is_HA_GoAhead = false;
+		
+		double top = lastCandle.HA.High - lastCandle.HA.Close;
+		double bottom = lastCandle.HA.Open - lastCandle.HA.Low;
+		double height = Math.abs(100*(lastCandle.HA.Close - lastCandle.HA.Open)/lastCandle.HA.Open);
+		double ratio = Math.abs(top/bottom);
+		
+		System.out.println(stock.SYMBOL+"-BUYHA-ratio="+ratio+" height="+height);
+		Util.Logger.log(0, stock.SYMBOL+"-BUYHA-ratio="+ratio+" height="+height);
+		if(top==0 
+				|| ratio==Double.POSITIVE_INFINITY 
+				|| ratio==Double.NEGATIVE_INFINITY || ratio > 1 || bottom < 0)
+		{
+			if(height > 0.03)
+			{
+				is_HA_GoAhead = true;	
+			}
+		}
+		
+		return is_HA_GoAhead;
+	}
+	
+	private boolean is_SELL_HA_GoAhead(ArrayList<HistoricalDataEx> candles) 
+	{
+		HistoricalDataEx lastCandle = candles.get(0);
+		boolean is_HA_GoAhead = false;
+		
+		double top = lastCandle.HA.High - lastCandle.HA.Open;
+		double bottom = lastCandle.HA.Close - lastCandle.HA.Low;
+		double height = Math.abs(100*(lastCandle.HA.Close - lastCandle.HA.Open)/lastCandle.HA.Open);
+		double ratio = Math.abs(bottom/top);
+		
+		System.out.println(stock.SYMBOL+"-SELLHA-ratio="+ratio+" height="+height);
+		Util.Logger.log(0, stock.SYMBOL+"-SELLHA-ratio="+ratio+" height="+height);
+		
+		if(top==0 
+				|| ratio==Double.POSITIVE_INFINITY 
+				|| ratio==Double.NEGATIVE_INFINITY || ratio > 1 || top <0)
+		{
+			if(height > 0.03)
+			{
+				is_HA_GoAhead = true;	
+			}
+		}
+		
+		return is_HA_GoAhead;
+	}
+	
 	private RulesValidation checkBuyingOpportunity(HistoricalDataEx lastMinus3, HistoricalDataEx lastMinus2,
 			HistoricalDataEx lastMinus1, HistoricalDataEx lastCandle) {
 
@@ -325,7 +394,7 @@ public class CandleTrendWorker implements Runnable {
 		
 		try {
 
-			Collections.sort(historicalData, new CandleComparator());
+			Collections.sort(historicalData, new CandleComparatorAsc());
 
 			calculateHeikinAshi(historicalData);
 			calculateMovingAvg(historicalData, 12);
@@ -346,6 +415,8 @@ public class CandleTrendWorker implements Runnable {
 			Util.Logger.log(1, e.getMessage());
 		}
 
+		Collections.sort(historicalData, new CandleComparatorDesc());
+
 		return nowMACD-preMACD;
 		
 	}
@@ -360,7 +431,7 @@ public class CandleTrendWorker implements Runnable {
 			double MACDghada = 0.0;
 			double valghada = 0.0;
 
-			Collections.sort(historicalData, new CandleComparator());
+			Collections.sort(historicalData, new CandleComparatorAsc());
 
 			calculateHeikinAshi(historicalData);
 			calculateMovingAvg(historicalData, 12);

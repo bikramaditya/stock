@@ -3,7 +3,7 @@ package uitls;
 import java.util.Comparator;
 import entity.HistoricalDataEx;
 
-public class CandleComparator implements Comparator<HistoricalDataEx>{
+public class CandleComparatorAsc implements Comparator<HistoricalDataEx>{
 
 	@Override
 	public int compare(HistoricalDataEx o1, HistoricalDataEx o2) {

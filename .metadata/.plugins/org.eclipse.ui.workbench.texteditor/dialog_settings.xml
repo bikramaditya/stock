@@ -2,12 +2,16 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="Oppor" key="selection"/>
+		<item value="today" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="today"/>
+			<item value="sign15Min"/>
+			<item value="-sign15Min"/>
+			<item value="HA-ratio"/>
 			<item value="oppor"/>
 			<item value="sessionMap"/>
 			<item value="boolean"/>
@@ -19,10 +23,6 @@
 			<item value="log"/>
 			<item value="sign"/>
 			<item value="QUEUE_NAME"/>
-			<item value="amo"/>
-			<item value="trailingStoploss"/>
-			<item value="TATAMOTORS"/>
-			<item value="tatam"/>
 		</list>
 		<list key="replacehistory">
 		</list>

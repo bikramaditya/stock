@@ -78,7 +78,7 @@ public class TrendFollowerV3 {
 	        Util.Logger.log(0, "running all threads"+new Date());	
 	        
 		}
-		while(isMarketOpen)
+		while(isTradingDay && isMarketOpen)
         {
         	isMarketOpen = util.isMarketOpen();
 	        
