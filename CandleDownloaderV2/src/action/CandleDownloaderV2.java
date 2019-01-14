@@ -60,9 +60,12 @@ public class CandleDownloaderV2 {
 						Date to = new Date(t);
 						
 						for (Stock stock : watchList) {
-							Runnable worker = new DownloadWorker(channel,kite,stock,to);
-				            executor.execute(worker);
-				            Thread.sleep(450);
+							//if(stock.SYMBOL.equals("ASIANPAINT"))
+							{
+								Runnable worker = new DownloadWorker(channel,kite,stock,to);
+					            executor.execute(worker);
+					            Thread.sleep(450);	
+							}
 						}
 						
 						executor.shutdown();
