@@ -21,6 +21,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.internal.StringMap;
 
 import entity.Sentiment;
+import entity.Stock;
 
 
 public class Util 
@@ -244,6 +245,23 @@ public class Util
 		}
 	}
 
+	public boolean isTradeAllowed() {
+		TimeZone zone = TimeZone.getTimeZone("Asia/Kolkata");
+		
+		LocalDateTime now = LocalDateTime.now(zone.toZoneId());
+		
+		String today = getTodayYYMMDD();
+		
+		if (now.isAfter(LocalDateTime.parse(today + "T09:15:00")) && now.isBefore(LocalDateTime.parse(today + "T15:15:00")))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
 	public boolean isMarketOpen() {
 		TimeZone zone = TimeZone.getTimeZone("Asia/Kolkata");
 		
@@ -267,5 +285,34 @@ public class Util
 	}
 	public void storeAccessToken(String AccessToken, String publicToken) {
 		dao.storeAccessToken(getTodayYYMMDD(),AccessToken,publicToken);
+	}
+	public ArrayList<Stock> GetVolumeToper(String string) {
+		ArrayList<Stock> list = new ArrayList<Stock>();
+		try {
+			String myURL = "https://www.nseindia.com/live_market/dynaContent/live_analysis/most_active/allTopValue1.json";
+			Document doc = Jsoup.connect(myURL).ignoreContentType(true).get();
+				
+			String JSONStr = doc.text(); 
+			
+			JsonParser parser = new JsonParser();
+			JsonObject o = parser.parse(JSONStr).getAsJsonObject();
+			JsonArray ar = o.getAsJsonArray("data");
+			
+			for(Object obj : ar)
+			{
+				JsonObject st = (JsonObject)obj;
+				JsonElement symbol = st.get("symbol");
+				Stock stock = new Stock();
+				stock.SYMBOL = symbol.getAsString();
+				stock.MKT="NSE";
+				list.add(stock);
+			}
+		}
+		catch(Exception e)
+		{
+			Logger.log(1, "Could not get top stocks, exiting thread"+e.getMessage());
+			e.printStackTrace();
+		}
+		return list;
 	}
 }

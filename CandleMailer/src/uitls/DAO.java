@@ -457,7 +457,7 @@ public class DAO
 		
 		if(fresh_count > 0)
 		{
-			String query = "SELECT * FROM stock_chart_prediction_ha where IS_VALID=1 and date(trade_date)=CURDATE() and MKT='"+MKT+"' order by trade_date asc";
+			String query = "SELECT * FROM stock_chart_prediction_ha where IS_VALID=1 and date(trade_date)=CURDATE() and MKT='"+MKT+"' order by symbol, trade_date asc";
 			Connection conn = getConnection();
 			try {
 				Statement st = conn.createStatement();

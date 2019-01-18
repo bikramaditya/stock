@@ -60,7 +60,7 @@ public class CandleDownloaderV2 {
 						Date to = new Date(t);
 						
 						for (Stock stock : watchList) {
-							//if(stock.SYMBOL.equals("ASIANPAINT"))
+							//if(stock.SYMBOL.equals("ADANIPORTS"))
 							{
 								Runnable worker = new DownloadWorker(channel,kite,stock,to);
 					            executor.execute(worker);
@@ -82,7 +82,6 @@ public class CandleDownloaderV2 {
 				System.out.println(e.getMessage());
 		        Util.Logger.log(1, e.getMessage());
 			}
-			
 			
 			System.out.println("Day Over"+new Date());
 	        Util.Logger.log(0, "Day Over"+new Date());

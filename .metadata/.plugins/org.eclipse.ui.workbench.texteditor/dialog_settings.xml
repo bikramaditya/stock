@@ -2,29 +2,30 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="today" key="selection"/>
+		<item value="checkS" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="checks"/>
+			<item value="GetMACD"/>
+			<item value="Duplicate"/>
+			<item value="Opportu"/>
+			<item value="opportu"/>
+			<item value="zone"/>
+			<item value="localdatet"/>
+			<item value="sign"/>
+			<item value="processCommand"/>
+			<item value="oppor"/>
+			<item value="checkSignal"/>
 			<item value="today"/>
 			<item value="sign15Min"/>
 			<item value="-sign15Min"/>
 			<item value="HA-ratio"/>
-			<item value="oppor"/>
-			<item value="sessionMap"/>
-			<item value="boolean"/>
-			<item value="getHistoricalData"/>
-			<item value="getHistoricalData5Min"/>
-			<item value="getHistoricalDataXMin"/>
-			<item value="checkForOpportunity"/>
-			<item value="storeOpportunity"/>
-			<item value="log"/>
-			<item value="sign"/>
-			<item value="QUEUE_NAME"/>
 		</list>
 		<list key="replacehistory">
+			<item value="macd"/>
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">

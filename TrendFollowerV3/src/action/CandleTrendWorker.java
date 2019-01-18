@@ -138,33 +138,42 @@ public class CandleTrendWorker implements Runnable {
 					System.out.println(" Received '" + msg + "'");
 					//ArrayList<HistoricalDataEx> historicalData = dao.getHistoricalData(stock);// 1 Min
 					
-					//for(int i = 374 ; i > 0; i--)
+					//for(int i = 375 ; i > 0; i--)
 					{
-						//ArrayList<HistoricalDataEx> historicalData1min = new ArrayList<HistoricalDataEx>(historicalData.subList(i, 998));
+						//ArrayList<HistoricalDataEx> historicalData1min = new ArrayList<HistoricalDataEx>(historicalData.subList(i, historicalData.size()-1));
 						ArrayList<HistoricalDataEx> historicalData1min = dao.getHistoricalData(stock);// 1 Min
+						int n = historicalData1min.size()-1;	
+						Collections.sort(historicalData1min, new CandleComparatorAsc());
 						
 						ArrayList<HistoricalDataEx> historicalData15min = getHistoricalDataXMin(historicalData1min, 15);// 15													// Min
 						ArrayList<HistoricalDataEx> historicalData5min = getHistoricalDataXMin(historicalData1min, 5);// 5Min
 						ArrayList<HistoricalDataEx> historicalData3min = getHistoricalDataXMin(historicalData1min, 3);// 3Min
 
 						String today = util.getTodayYYMMDD();
-						String timestamp = historicalData1min.get(0).timeStamp;
+						String timestamp = historicalData1min.get(n).timeStamp;
 						
-						if(timestamp.contains(today))
+						
+						if(timestamp.contains(today) && util.isTradeAllowed())//
 						{
-							double sign15Min = processCommand15Min(historicalData15min);
-							double sign5Min = processCommand(historicalData5min);
-							double sign3Min = processCommand(historicalData3min);
-							double sign1Min = processCommand(historicalData1min);
+							double[] sign15Min = GetMACD(historicalData15min);
+							double[] sign5Min = GetMACD(historicalData5min);
+							double[] sign3Min = GetMACD(historicalData3min);
+							double[] sign1Min = GetMACD(historicalData1min);
 							
-							Util.Logger.log(0, historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
-							System.out.println( historicalData1min.get(0).timeStamp+"-"+stock.SYMBOL+"-"+"sign15Min="+sign15Min+"sign5Min="+sign5Min+"sign3Min="+sign3Min+"sign1Min="+sign1Min);
+							Util.Logger.log(0,"MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign15Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
+							System.out.println("MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign15Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
+
+							Util.Logger.log(0,"Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign15Min="+sign15Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
+							System.out.println("Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign15Min="+sign15Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
 							
-							double absSlope=Math.abs(sign15Min+sign5Min+sign3Min+sign1Min);
 							
-							if(absSlope>0)
-							{						
-								if(sign15Min>0 && sign5Min>0 && sign3Min>0 && sign1Min>0)
+							if(sign15Min[0]>0.0 && sign5Min[0]>0.0 && sign3Min[0]>0.0 && sign1Min[0]>0.0
+									&& 
+									sign15Min[1]>0.0 && sign5Min[1]>0.0 && sign3Min[1]>0.0 && sign1Min[1]>0.0)
+							{
+								if(Math.abs(sign15Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
+										&& 
+								   Math.abs(sign15Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
 								{
 									double is_buy_15Min = is_BUY_HA_GoAhead(historicalData15min);
 									double is_buy_5Min = is_BUY_HA_GoAhead(historicalData5min);
@@ -172,8 +181,8 @@ public class CandleTrendWorker implements Runnable {
 									double is_buy = is_BUY_HA_GoAhead(historicalData1min);
 									
 									double totalHA = is_buy_15Min+is_buy_5Min+is_buy_3Min+is_buy;
-									
-									if(totalHA > 0.5)
+
+									//if(totalHA > 0.2)// && is_buy_15Min> 0.04 && is_buy_5Min> 0.04 && is_buy_3Min> 0.04 && is_buy> 0.04)
 									{
 										TradeType trade_type = sessionMap.get(Q);
 										
@@ -184,21 +193,22 @@ public class CandleTrendWorker implements Runnable {
 										}
 										else
 										{
+
 											sessionMap.put(Q, TradeType.BUY);	
 											writeSerializedXML();
 											Opportunity opty = new Opportunity();
-											opty.MA = sign15Min;
-											opty.MOM = sign5Min;
-											opty.MACD = sign3Min;
-											opty.PVT = sign1Min;
-											opty.Slope = absSlope;
+											opty.MA = sign15Min[0];
+											opty.MOM = sign5Min[0];
+											opty.MACD = sign3Min[0];
+											opty.PVT = sign1Min[0];
+											
 											opty.Score = totalHA;
-											opty.MKT = stock.MKT;
+											opty.MKT = "NSE";
 											opty.Symbol = stock.SYMBOL;
 											opty.TradeType = TradeType.BUY;
-											opty.TimeStamp = historicalData1min.get(0).timeStamp;
-
-											opty.EntryPrice = (historicalData1min.get(0).high+historicalData1min.get(0).low)/2;
+											opty.TimeStamp = historicalData1min.get(n).timeStamp;
+											
+											opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
 											opty.ExitPrice = opty.EntryPrice * (1 + 0.003);
 											opty.StopLoss = opty.EntryPrice * (1 - 0.006);
 
@@ -211,7 +221,15 @@ public class CandleTrendWorker implements Runnable {
 										}
 									}
 								}
-								else if(sign15Min<0 && sign5Min<0 && sign3Min<0 && sign1Min<0)
+								
+							}
+							else if(sign15Min[0]<0.0 && sign5Min[0]<0.0 && sign3Min[0]<0.0 && sign1Min[0]<0.0
+									&& 
+									sign15Min[1]<0.0 && sign5Min[1]<0.0 && sign3Min[1]<0.0 && sign1Min[1]<0.0)
+							{
+								if(Math.abs(sign15Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
+										&& 
+								   Math.abs(sign15Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
 								{
 									double is_sell_15Min = is_SELL_HA_GoAhead(historicalData15min);
 									double is_sell_5Min = is_SELL_HA_GoAhead(historicalData5min);
@@ -220,7 +238,7 @@ public class CandleTrendWorker implements Runnable {
 									
 									double totalHA = is_sell_15Min+is_sell_5Min+is_sell_3Min+is_sell;
 
-									if(totalHA > 0.5)
+									//if(totalHA > 0.2)// && is_sell_15Min > 0.04 && is_sell_5Min > 0.04 && is_sell_3Min > 0.04 && is_sell > 0.04)
 									{
 										TradeType trade_type = sessionMap.get(Q);
 										
@@ -235,18 +253,18 @@ public class CandleTrendWorker implements Runnable {
 											writeSerializedXML();
 											
 											Opportunity opty = new Opportunity();
-											opty.MA = sign15Min;
-											opty.MOM = sign5Min;
-											opty.MACD = sign3Min;
-											opty.PVT = sign1Min;
-											opty.Slope = absSlope;
+											opty.MA = sign15Min[0];
+											opty.MOM = sign5Min[0];
+											opty.MACD = sign3Min[0];
+											opty.PVT = sign1Min[0];
+
 											opty.Score = totalHA;
-											opty.MKT = stock.MKT;
+											opty.MKT = "NSE";
 											opty.Symbol = stock.SYMBOL;
 											opty.TradeType = TradeType.SELL;
-											opty.TimeStamp = historicalData1min.get(0).timeStamp;
+											opty.TimeStamp = historicalData1min.get(n).timeStamp;
 
-											opty.EntryPrice = (historicalData1min.get(0).high+historicalData1min.get(0).low)/2;
+											opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
 											opty.ExitPrice = opty.EntryPrice * (1 - 0.003);
 											opty.StopLoss = opty.EntryPrice * (1 + 0.006);
 
@@ -258,13 +276,15 @@ public class CandleTrendWorker implements Runnable {
 											storeOpportunity(opty);	
 										}
 									}
-								}
+								}										
 							}
+
+						
 						}
 						else
 						{
-							Util.Logger.log(0, "Old data received");
-							System.out.println("Old data received");
+							Util.Logger.log(0, "Trade not allowed or Old data received");
+							System.out.println("= Trade not allowed or Old data received");
 						}
 					}
 				}
@@ -279,6 +299,40 @@ public class CandleTrendWorker implements Runnable {
 
 		// System.out.println(Thread.currentThread().getName() + " End.");
 		Util.Logger.log(0, Thread.currentThread().getName() + " End.");
+	}
+
+	private double checkSignal(ArrayList<HistoricalDataEx> historicalData) {
+		double preMACD = 0;
+		double nowMACD = 0;
+		
+		try {
+
+			//Collections.sort(historicalData, new CandleComparatorAsc());
+
+			calculateHeikinAshi(historicalData);
+			calculateMovingAvg(historicalData, 12);
+			calculateMomentum(historicalData, 14);
+			calculatePVT(historicalData, 1);
+			calculateEMA12(historicalData);
+			calculateEMA26(historicalData);
+			calculateMACD(historicalData);
+			calculateSignalLine(historicalData);
+			
+			int i = historicalData.size()-1;
+			
+			preMACD = historicalData.get(i-1).Signal;
+			nowMACD = historicalData.get(i).Signal;
+			Util.Logger.log(0, historicalData.get(i).timeStamp+" - nowSignal="+nowMACD );
+		} catch (Exception e) {
+			e.printStackTrace();
+			Util.Logger.log(1, e.getMessage());
+		}
+
+		//Collections.sort(historicalData, new CandleComparatorDesc());
+
+		double diff = nowMACD-preMACD;
+		
+		return diff;
 	}
 
 	private double is_BUY_HA_GoAhead(ArrayList<HistoricalDataEx> candles) 
@@ -401,14 +455,12 @@ public class CandleTrendWorker implements Runnable {
 		return opty;
 	}
 
-	private double processCommand(ArrayList<HistoricalDataEx> historicalData) {
-
-		double preMACD = 0;
-		double nowMACD = 0;
+	private double[] GetMACD(ArrayList<HistoricalDataEx> historicalData) {
+		double[] macd = {0,0};
 		
 		try {
 
-			Collections.sort(historicalData, new CandleComparatorAsc());
+			//Collections.sort(historicalData, new CandleComparatorAsc());
 
 			calculateHeikinAshi(historicalData);
 			calculateMovingAvg(historicalData, 12);
@@ -419,54 +471,26 @@ public class CandleTrendWorker implements Runnable {
 			calculateMACD(historicalData);
 			calculateSignalLine(historicalData);
 			
-			int i = historicalData.size()-1;
-			
-			preMACD = historicalData.get(i-1).MACD;
-			nowMACD = historicalData.get(i).MACD;
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			Util.Logger.log(1, e.getMessage());
-		}
-
-		Collections.sort(historicalData, new CandleComparatorDesc());
-
-		double diff = nowMACD-preMACD;
-		return diff;
-	}
-	private double processCommand15Min(ArrayList<HistoricalDataEx> historicalData) {
-
-		double preMACD = 0;
-		double nowMACD = 0;
+			int n = historicalData.size()-1;	
 		
-		try {
-
-			Collections.sort(historicalData, new CandleComparatorAsc());
-
-			calculateHeikinAshi(historicalData);
-			calculateMovingAvg(historicalData, 12);
-			calculateMomentum(historicalData, 14);
-			calculatePVT(historicalData, 1);
-			calculateEMA12(historicalData);
-			calculateEMA26(historicalData);
-			calculateMACD(historicalData);
-			calculateSignalLine(historicalData);
+			double macdDiff = historicalData.get(n).MACD-historicalData.get(n-1).MACD;
+			double signalDiff = historicalData.get(n).Signal-historicalData.get(n-1).Signal;
 			
-			int i = historicalData.size()-1;
+			macd[0]=macdDiff;
+			macd[1]=signalDiff;
 			
-			preMACD = historicalData.get(i-1).close;
-			nowMACD = historicalData.get(i).close;
-			
+			//Util.Logger.log(0, historicalData.get(n).timeStamp+"- nowMACD="+nowMACD );
 		} catch (Exception e) {
 			e.printStackTrace();
 			Util.Logger.log(1, e.getMessage());
 		}
 
-		Collections.sort(historicalData, new CandleComparatorDesc());
+		//Collections.sort(historicalData, new CandleComparatorDesc());
 
-		double diff = nowMACD-preMACD;
-		return diff;
+		
+		return macd;
 	}
+
 	private void processCommand() {
 		try {
 
@@ -768,8 +792,8 @@ public class CandleTrendWorker implements Runnable {
 			HistoricalDataEx prev = historicalData.get(i - 9);
 			HistoricalDataEx curr = historicalData.get(i);
 
-			double Signal = (curr.MACD - prev.MACD) * multiplier + prev.MACD;
-
+			//double Signal = (curr.MACD - prev.MACD) * multiplier + prev.MACD;
+			double Signal = curr.MACD*multiplier + prev.MACD*(1- multiplier);
 			historicalData.get(i).Signal = Signal;
 		}
 	}
@@ -785,17 +809,31 @@ public class CandleTrendWorker implements Runnable {
 	}
 
 	private void calculateEMA26(ArrayList<HistoricalDataEx> historicalData) {
+		double initEMA = 0;
 		double multiplier = 2.0 / (26.0 + 1.0);// = (2 / (10 + 1) ) = 0.1818 (18.18%)
-		for (int i = 26; i < historicalData.size(); i++) {
+		int n = 26;
+		
+		if(historicalData.size() < n)
+		{
+			n = historicalData.size()-1;
+		}
+		
+		for(int i = 0 ; i < n; i++)
+		{
+			initEMA+=historicalData.get(i).close;
+		}
+		initEMA = initEMA/n;
+		
+		for (int i = n; i < historicalData.size(); i++) {
 			HistoricalDataEx prev = historicalData.get(i - 1);
 			HistoricalDataEx curr = historicalData.get(i);
 
 			double prevEMA = prev.EMA26;
 			if (prevEMA == 0.0) {
-				prevEMA = prev.MovingAvg;
+				prevEMA = initEMA;
 			}
 
-			double EMA = (curr.close - prevEMA) * multiplier + prevEMA;
+			double EMA = curr.close*multiplier + prevEMA*(1- multiplier);
 
 			historicalData.get(i).EMA26 = EMA;
 		}
@@ -803,16 +841,30 @@ public class CandleTrendWorker implements Runnable {
 
 	private void calculateEMA12(ArrayList<HistoricalDataEx> historicalData) {
 		double multiplier = 2.0 / (12.0 + 1.0);// = (2 / (10 + 1) ) = 0.1818 (18.18%)
-		for (int i = 12; i < historicalData.size(); i++) {
+		double initEMA = 0;
+		int n = 12;
+		
+		if(historicalData.size() < n)
+		{
+			n = historicalData.size()-1;
+		}
+		
+		for(int i = 0 ; i < n; i++)
+		{
+			initEMA+=historicalData.get(i).close;
+		}
+		initEMA = initEMA/n;
+		
+		for (int i = n; i < historicalData.size(); i++) {
 			HistoricalDataEx prev = historicalData.get(i - 1);
 			HistoricalDataEx curr = historicalData.get(i);
 
 			double prevEMA = prev.EMA12;
 			if (prevEMA == 0.0) {
-				prevEMA = prev.MovingAvg;
+				prevEMA = initEMA;
 			}
 
-			double EMA = (curr.close - prevEMA) * multiplier + prevEMA;
+			double EMA = (curr.close - prevEMA)*multiplier + prevEMA;
 
 			historicalData.get(i).EMA12 = EMA;
 		}

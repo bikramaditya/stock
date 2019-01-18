@@ -36,7 +36,8 @@ public class DownloadWorker implements Runnable{
 		try {
 			String Q = stock.MKT+"-"+stock.SYMBOL;
 			channel.queueDeclare(Q, false, false, false, null);
-
+			channel.queuePurge (Q);
+			
 			DAO dao = new DAO();
 			System.out.println("");
 			Date lastTimeStamp = dao.getLastCandleTimeStamp(stock);

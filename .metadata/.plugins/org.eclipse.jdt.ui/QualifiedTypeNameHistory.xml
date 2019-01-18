@@ -36,4 +36,14 @@
 <fullyQualifiedTypeName name="java.io.FileNotFoundException"/>
 <fullyQualifiedTypeName name="uitls.CandleComparatorDesc"/>
 <fullyQualifiedTypeName name="uitls.CandleComparatorAsc"/>
+<fullyQualifiedTypeName name="entity.MACDObj"/>
+<fullyQualifiedTypeName name="java.util.Set"/>
+<fullyQualifiedTypeName name="java.util.Map"/>
+<fullyQualifiedTypeName name="java.time.ZonedDateTime"/>
+<fullyQualifiedTypeName name="org.ta4j.core.indicators.helpers.ClosePriceIndicator"/>
+<fullyQualifiedTypeName name="org.ta4j.core.indicators.EMAIndicator"/>
+<fullyQualifiedTypeName name="org.ta4j.core.indicators.MACDIndicator"/>
+<fullyQualifiedTypeName name="org.ta4j.core.TimeSeries"/>
+<fullyQualifiedTypeName name="java.util.HashMap"/>
+<fullyQualifiedTypeName name="java.util.HashSet"/>
 </qualifiedTypeNameHistroy>
