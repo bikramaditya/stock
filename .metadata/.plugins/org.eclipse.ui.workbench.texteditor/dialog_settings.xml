@@ -2,12 +2,14 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="checkS" key="selection"/>
+		<item value="Socket" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="socket"/>
+			<item value="sign15Min"/>
 			<item value="checks"/>
 			<item value="GetMACD"/>
 			<item value="Duplicate"/>
@@ -20,11 +22,10 @@
 			<item value="oppor"/>
 			<item value="checkSignal"/>
 			<item value="today"/>
-			<item value="sign15Min"/>
 			<item value="-sign15Min"/>
-			<item value="HA-ratio"/>
 		</list>
 		<list key="replacehistory">
+			<item value="sign10Min"/>
 			<item value="macd"/>
 		</list>
 	</section>

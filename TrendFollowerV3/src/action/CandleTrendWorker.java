@@ -145,7 +145,7 @@ public class CandleTrendWorker implements Runnable {
 						int n = historicalData1min.size()-1;	
 						Collections.sort(historicalData1min, new CandleComparatorAsc());
 						
-						ArrayList<HistoricalDataEx> historicalData15min = getHistoricalDataXMin(historicalData1min, 15);// 15													// Min
+						ArrayList<HistoricalDataEx> historicalData10min = getHistoricalDataXMin(historicalData1min, 10);// 15													// Min
 						ArrayList<HistoricalDataEx> historicalData5min = getHistoricalDataXMin(historicalData1min, 5);// 5Min
 						ArrayList<HistoricalDataEx> historicalData3min = getHistoricalDataXMin(historicalData1min, 3);// 3Min
 
@@ -155,32 +155,32 @@ public class CandleTrendWorker implements Runnable {
 						
 						if(timestamp.contains(today) && util.isTradeAllowed())//
 						{
-							double[] sign15Min = GetMACD(historicalData15min);
+							double[] sign10Min = GetMACD(historicalData10min);
 							double[] sign5Min = GetMACD(historicalData5min);
 							double[] sign3Min = GetMACD(historicalData3min);
 							double[] sign1Min = GetMACD(historicalData1min);
 							
-							Util.Logger.log(0,"MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign15Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
-							System.out.println("MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign15Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
+							Util.Logger.log(0,"MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign10Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
+							System.out.println("MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign10Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
 
-							Util.Logger.log(0,"Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign15Min="+sign15Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
-							System.out.println("Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign15Min="+sign15Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
+							Util.Logger.log(0,"Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign10Min="+sign10Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
+							System.out.println("Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign10Min="+sign10Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
 							
 							
-							if(sign15Min[0]>0.0 && sign5Min[0]>0.0 && sign3Min[0]>0.0 && sign1Min[0]>0.0
+							if(sign10Min[0]>0.0 && sign5Min[0]>0.0 && sign3Min[0]>0.0 && sign1Min[0]>0.0
 									&& 
-									sign15Min[1]>0.0 && sign5Min[1]>0.0 && sign3Min[1]>0.0 && sign1Min[1]>0.0)
+									sign10Min[1]>0.0 && sign5Min[1]>0.0 && sign3Min[1]>0.0 && sign1Min[1]>0.0)
 							{
-								if(Math.abs(sign15Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
+								if(Math.abs(sign10Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
 										&& 
-								   Math.abs(sign15Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
+								   Math.abs(sign10Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
 								{
-									double is_buy_15Min = is_BUY_HA_GoAhead(historicalData15min);
+									double is_buy_10Min = is_BUY_HA_GoAhead(historicalData10min);
 									double is_buy_5Min = is_BUY_HA_GoAhead(historicalData5min);
 									double is_buy_3Min = is_BUY_HA_GoAhead(historicalData3min);
 									double is_buy = is_BUY_HA_GoAhead(historicalData1min);
 									
-									double totalHA = is_buy_15Min+is_buy_5Min+is_buy_3Min+is_buy;
+									double totalHA = is_buy_10Min+is_buy_5Min+is_buy_3Min+is_buy;
 
 									//if(totalHA > 0.2)// && is_buy_15Min> 0.04 && is_buy_5Min> 0.04 && is_buy_3Min> 0.04 && is_buy> 0.04)
 									{
@@ -197,7 +197,7 @@ public class CandleTrendWorker implements Runnable {
 											sessionMap.put(Q, TradeType.BUY);	
 											writeSerializedXML();
 											Opportunity opty = new Opportunity();
-											opty.MA = sign15Min[0];
+											opty.MA = sign10Min[0];
 											opty.MOM = sign5Min[0];
 											opty.MACD = sign3Min[0];
 											opty.PVT = sign1Min[0];
@@ -223,15 +223,15 @@ public class CandleTrendWorker implements Runnable {
 								}
 								
 							}
-							else if(sign15Min[0]<0.0 && sign5Min[0]<0.0 && sign3Min[0]<0.0 && sign1Min[0]<0.0
+							else if(sign10Min[0]<0.0 && sign5Min[0]<0.0 && sign3Min[0]<0.0 && sign1Min[0]<0.0
 									&& 
-									sign15Min[1]<0.0 && sign5Min[1]<0.0 && sign3Min[1]<0.0 && sign1Min[1]<0.0)
+									sign10Min[1]<0.0 && sign5Min[1]<0.0 && sign3Min[1]<0.0 && sign1Min[1]<0.0)
 							{
-								if(Math.abs(sign15Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
+								if(Math.abs(sign10Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
 										&& 
-								   Math.abs(sign15Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
+								   Math.abs(sign10Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
 								{
-									double is_sell_15Min = is_SELL_HA_GoAhead(historicalData15min);
+									double is_sell_15Min = is_SELL_HA_GoAhead(historicalData10min);
 									double is_sell_5Min = is_SELL_HA_GoAhead(historicalData5min);
 									double is_sell_3Min = is_SELL_HA_GoAhead(historicalData3min);
 									double is_sell = is_SELL_HA_GoAhead(historicalData1min);
@@ -253,7 +253,7 @@ public class CandleTrendWorker implements Runnable {
 											writeSerializedXML();
 											
 											Opportunity opty = new Opportunity();
-											opty.MA = sign15Min[0];
+											opty.MA = sign10Min[0];
 											opty.MOM = sign5Min[0];
 											opty.MACD = sign3Min[0];
 											opty.PVT = sign1Min[0];
