@@ -49,40 +49,26 @@ public class TrendFollowerV3 {
     	Connection connection = factory.newConnection();
     	Channel channel = connection.createChannel();
 		
+    	ArrayList<Stock> watchList = dao.getWatchList();
     	
-		while (isTradingDay && isMarketOpen)
+		if (isTradingDay && isMarketOpen)
 		{	
 			System.out.println("scanning new toppers - "+new Date());
 	        Util.Logger.log(0, "scanning new toppers - "+new Date());
 	     
-	        ArrayList<Stock> watchList = dao.getWatchList();
-	    	ArrayList<Stock> toppers = util.GetVolumeToper("NSE");
-	    	
-			if(watchList.size() > 0 && toppers!=null && toppers.size()>0)
+			if(watchList.size() > 0)
 			{
 				for (Stock stock : watchList) {
-					for(Stock topper : toppers)
-					{
-						if(topper.SYMBOL.equals(stock.SYMBOL))
-						{
-							if(!threadsMap.contains(stock.MKT+":"+stock.SYMBOL))
-							{
-								threadsMap.add(stock.MKT+":"+stock.SYMBOL);
-								Runnable worker = new CandleTrendWorker(channel,stock,kite);
-								worker.run();
-							}
-							else
-							{
-								System.out.println(stock.SYMBOL+" topper already running- "+new Date());
-						        Util.Logger.log(0, stock.SYMBOL+" topper already running- "+new Date());
-							}
-						}
-					}
+					Runnable worker = new CandleTrendWorker(channel,stock,kite);
+					worker.run();
 				}							
-			}
-			isMarketOpen = util.isMarketOpen();
-			
-	        Thread.sleep(60000);
+			}			
+		}
+		
+		while(isMarketOpen)
+		{
+			isMarketOpen = util.isMarketOpen();			
+	        Thread.sleep(5000);
 		}
 		
 		System.out.println("isTradingDay && isMarketOpen"+isTradingDay +"-"+ isMarketOpen);

@@ -169,11 +169,11 @@ public class CandleTrendWorker implements Runnable {
 							
 							if(sign10Min[0]>0.0 && sign5Min[0]>0.0 && sign3Min[0]>0.0 && sign1Min[0]>0.0
 									&& 
-									sign10Min[1]>0.0 && sign5Min[1]>0.0 && sign3Min[1]>0.0 && sign1Min[1]>0.0)
+									sign10Min[1]>-0.02 && sign5Min[1]>-0.02 && sign3Min[1]>0.0 && sign1Min[1]>0.0)
 							{
-								if(Math.abs(sign10Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
+								if(Math.abs(sign10Min[0])>0.0001 && Math.abs(sign5Min[0])>0.0001 && Math.abs(sign3Min[0])>0.0001 && Math.abs(sign1Min[0])>0.0001 
 										&& 
-								   Math.abs(sign10Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
+								   Math.abs(sign10Min[1])>0.0001 && Math.abs(sign5Min[1])>0.0001 && Math.abs(sign3Min[1])>0.0001 && Math.abs(sign1Min[1])>0.0001)
 								{
 									double is_buy_10Min = is_BUY_HA_GoAhead(historicalData10min);
 									double is_buy_5Min = is_BUY_HA_GoAhead(historicalData5min);
@@ -225,11 +225,11 @@ public class CandleTrendWorker implements Runnable {
 							}
 							else if(sign10Min[0]<0.0 && sign5Min[0]<0.0 && sign3Min[0]<0.0 && sign1Min[0]<0.0
 									&& 
-									sign10Min[1]<0.0 && sign5Min[1]<0.0 && sign3Min[1]<0.0 && sign1Min[1]<0.0)
+									sign10Min[1]<0.02 && sign5Min[1]<0.02 && sign3Min[1]<0.0 && sign1Min[1]<0.0)
 							{
-								if(Math.abs(sign10Min[0])>0.001 && Math.abs(sign5Min[0])>0.001 && Math.abs(sign3Min[0])>0.001 && Math.abs(sign1Min[0])>0.001 
+								if(Math.abs(sign10Min[0])>0.0001 && Math.abs(sign5Min[0])>0.0001 && Math.abs(sign3Min[0])>0.0001 && Math.abs(sign1Min[0])>0.0001 
 										&& 
-								   Math.abs(sign10Min[1])>0.001 && Math.abs(sign5Min[1])>0.001 && Math.abs(sign3Min[1])>0.001 && Math.abs(sign1Min[1])>0.001)
+								   Math.abs(sign10Min[1])>0.0001 && Math.abs(sign5Min[1])>0.0001 && Math.abs(sign3Min[1])>0.0001 && Math.abs(sign1Min[1])>0.0001)
 								{
 									double is_sell_15Min = is_SELL_HA_GoAhead(historicalData10min);
 									double is_sell_5Min = is_SELL_HA_GoAhead(historicalData5min);
