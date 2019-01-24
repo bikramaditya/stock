@@ -2,27 +2,27 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="Socket" key="selection"/>
+		<item value="Worker" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="worker"/>
+			<item value="createCandle"/>
+			<item value="tickTS"/>
+			<item value="zoneid"/>
+			<item value="ZoneId"/>
+			<item value="Collections"/>
+			<item value="channel"/>
+			<item value="tickerUsage"/>
+			<item value="ticker"/>
 			<item value="socket"/>
 			<item value="sign15Min"/>
 			<item value="checks"/>
 			<item value="GetMACD"/>
 			<item value="Duplicate"/>
 			<item value="Opportu"/>
-			<item value="opportu"/>
-			<item value="zone"/>
-			<item value="localdatet"/>
-			<item value="sign"/>
-			<item value="processCommand"/>
-			<item value="oppor"/>
-			<item value="checkSignal"/>
-			<item value="today"/>
-			<item value="-sign15Min"/>
 		</list>
 		<list key="replacehistory">
 			<item value="sign10Min"/>

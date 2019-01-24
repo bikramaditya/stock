@@ -7,10 +7,10 @@
 	<section name="conditionHistory">
 	</section>
 	<section name="org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator$ExpressionInformationControl">
-		<item value="896" key="SashWeightTree"/>
-		<item value="103" key="SashWeightDetails"/>
+		<item value="821" key="SashWeightTree"/>
+		<item value="178" key="SashWeightDetails"/>
 		<item value="816" key="WIDTH"/>
-		<item value="542" key="HEIGHT"/>
+		<item value="720" key="HEIGHT"/>
 	</section>
 	<section name="org.eclipse.jdt.debug.ui.MAIN_METHOD_SELECTION_DIALOG">
 		<item value="true" key="ShowStatusLine"/>

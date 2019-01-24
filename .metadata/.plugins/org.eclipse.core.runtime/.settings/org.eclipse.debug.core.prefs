@@ -1,2 +1,2 @@
 eclipse.preferences.version=1
-prefWatchExpressions=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<watchExpressions>\r\n<expression enabled\="true" text\="candle"/>\r\n<expression enabled\="true" text\="lastCandle"/>\r\n<expression enabled\="true" text\="stock"/>\r\n<expression enabled\="true" text\="historicalData"/>\r\n</watchExpressions>\r\n
+prefWatchExpressions=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<watchExpressions>\r\n<expression enabled\="true" text\="candle"/>\r\n<expression enabled\="true" text\="lastCandle"/>\r\n<expression enabled\="true" text\="stock"/>\r\n<expression enabled\="true" text\="historicalData"/>\r\n<expression enabled\="true" text\=""/>\r\n<expression enabled\="true" text\="ticks"/>\r\n</watchExpressions>\r\n

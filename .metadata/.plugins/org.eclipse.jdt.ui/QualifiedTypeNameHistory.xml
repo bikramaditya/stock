@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
-<fullyQualifiedTypeName name="java.io.UnsupportedEncodingException"/>
-<fullyQualifiedTypeName name="entity.RulesValidation"/>
-<fullyQualifiedTypeName name="action.HtmlMailSender"/>
 <fullyQualifiedTypeName name="entity.Opportunity"/>
-<fullyQualifiedTypeName name="java.util.ArrayList"/>
 <fullyQualifiedTypeName name="entity.HistoricalDataEx"/>
 <fullyQualifiedTypeName name="entity.HeikinAshi"/>
 <fullyQualifiedTypeName name="java.lang.Math"/>
@@ -14,7 +10,6 @@
 <fullyQualifiedTypeName name="com.google.gson.internal.StringMap"/>
 <fullyQualifiedTypeName name="action.TradeExecutorV2"/>
 <fullyQualifiedTypeName name="uitls.Util"/>
-<fullyQualifiedTypeName name="com.zerodhatech.models.Order"/>
 <fullyQualifiedTypeName name="java.lang.Double"/>
 <fullyQualifiedTypeName name="action.TradeStatusV2"/>
 <fullyQualifiedTypeName name="uitls.DAO"/>
@@ -46,4 +41,23 @@
 <fullyQualifiedTypeName name="org.ta4j.core.TimeSeries"/>
 <fullyQualifiedTypeName name="java.util.HashMap"/>
 <fullyQualifiedTypeName name="java.util.HashSet"/>
+<fullyQualifiedTypeName name="action.TickerDownloaderV1"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="com.neovisionaries.ws.client.WebSocketException"/>
+<fullyQualifiedTypeName name="com.zerodhatech.ticker.KiteTicker"/>
+<fullyQualifiedTypeName name="com.zerodhatech.ticker.OnConnect"/>
+<fullyQualifiedTypeName name="com.zerodhatech.ticker.OnDisconnect"/>
+<fullyQualifiedTypeName name="com.zerodhatech.ticker.OnOrderUpdate"/>
+<fullyQualifiedTypeName name="com.zerodhatech.ticker.OnError"/>
+<fullyQualifiedTypeName name="com.zerodhatech.ticker.OnTicks"/>
+<fullyQualifiedTypeName name="java.text.NumberFormat"/>
+<fullyQualifiedTypeName name="java.text.DecimalFormat"/>
+<fullyQualifiedTypeName name="com.zerodhatech.models.Order"/>
+<fullyQualifiedTypeName name="java.lang.Runnable"/>
+<fullyQualifiedTypeName name="java.sql.Time"/>
+<fullyQualifiedTypeName name="action.TickFollowerV1"/>
+<fullyQualifiedTypeName name="com.zerodhatech.models.Tick"/>
+<fullyQualifiedTypeName name="java.sql.Date"/>
+<fullyQualifiedTypeName name="java.util.Collections"/>
+<fullyQualifiedTypeName name="java.time.Instant"/>
 </qualifiedTypeNameHistroy>

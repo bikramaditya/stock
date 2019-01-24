@@ -65,8 +65,10 @@
 		<item value="1" key="FatJarPackageWizardPage.LIBRARY_HANDLING"/>
 		<list key="FatJarPackageWizardPage.DESTINATION_NAMES_ID">
 			<item value="C:\Users\Administrator\Desktop\TrendFollowerV3.jar"/>
-			<item value="C:\Users\Administrator\Desktop\CandleDownloaderV2.jar"/>
+			<item value="C:\Users\Administrator\Desktop\TickFollowerV1.jar"/>
 			<item value="C:\Users\Administrator\Desktop\CandleMailerV1.jar"/>
+			<item value="C:\Users\Administrator\Desktop\TickerDownloaderV1.jar"/>
+			<item value="C:\Users\Administrator\Desktop\CandleDownloaderV2.jar"/>
 			<item value="C:\Users\Administrator\Desktop\TradeExecutorV2.jar"/>
 			<item value="C:\Users\Administrator\Desktop\CandleTrendV2.jar"/>
 			<item value="C:\Users\Administrator\Desktop\TradeStatusV2.jar"/>
