@@ -43,11 +43,11 @@ public class DAO
 			pool.setUsername("root");
 			pool.setPassword("root");
 			pool.setUrl("jdbc:mysql://localhost/stock1");
-			pool.setInitialSize(4);
-			pool.setMinIdle(4);
-			pool.setMaxIdle(20);
+			pool.setInitialSize(35);
+			pool.setMinIdle(25);
+			pool.setMaxIdle(35);
 			pool.setMaxOpenPreparedStatements(180);
-			pool.setMaxTotal(10);
+			pool.setMaxTotal(50);
 		}
 	}
 
@@ -418,7 +418,7 @@ public class DAO
 
 	public Date getLastCandleTimeStamp(Stock stock) {
 		Date lastTime = null;
-		String query = "select max(TIMESTAMP) as lastTime from stock_candle_data_5min where MKT='"+stock.MKT+"' and SYMBOL='"+stock.SYMBOL+"'";
+		String query = "select max(TIMESTAMP) as lastTime from stock_candle_data_1min where MKT='"+stock.MKT+"' and SYMBOL='"+stock.SYMBOL+"'";
 		Connection conn = getConnection();
 		try {
 			Timestamp timeStamp = null; 

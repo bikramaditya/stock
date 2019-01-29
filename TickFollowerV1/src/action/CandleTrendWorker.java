@@ -36,7 +36,7 @@ public class CandleTrendWorker implements Runnable {
 	private DAO dao = null;
 	private Util util = null;
 	float upDown = 0f;
-	Channel channel;
+
 	private static ConcurrentHashMap<String,TradeType> sessionMap;
 	private static String sessionXML = "";
 	private ArrayList<Tick> ticks = new ArrayList<Tick>();
@@ -44,7 +44,6 @@ public class CandleTrendWorker implements Runnable {
 	public CandleTrendWorker(Channel channel, Stock stock, Kite kite) throws Exception {
 		this.stock = stock;
 		this.util = new Util();
-		this.channel = channel;
 		
 		String user_home = System.getProperty("user.home");
 		String today = util.getTodayYYMMDD();
@@ -107,17 +106,19 @@ public class CandleTrendWorker implements Runnable {
 			
 			sessionMap.putIfAbsent(Q, TradeType.NONE);
 			
-			channel.queueDeclare(Q, false, false, false, null);
-			System.out.println(Q + "Waiting for messages.");
 			writeSerializedXML();
+
+			boolean isMarketOpen = util.isMarketOpen();
 			
-			DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-				String msg = new String(delivery.getBody(), "UTF-8");
-				if (msg != null && msg.equals(stock.instrument_token + " Data Arrieved")) 
-				{
-					ticks = dao.updateTicks(ticks, stock);
-					
-					System.out.println(" Received '" + msg + "'");
+			while(isMarketOpen)
+			{
+				int prevSize = ticks.size();
+				ticks = dao.updateTicks(ticks, stock);
+				int postSize = ticks.size();
+				
+				if(postSize > prevSize)
+				{					
+					System.out.println("Tick Received '" + stock.SYMBOL + "'");
 					
 					ArrayList<HistoricalDataEx> historicalData1min = convertTickToData(ticks);// 1 Min
 					
@@ -264,12 +265,10 @@ public class CandleTrendWorker implements Runnable {
 						Util.Logger.log(0, "Trade not allowed or Old data received");
 						System.out.println("= Trade not allowed or Old data received");
 					}
-				
 				}
-			};
-			channel.basicConsume(Q, true, deliverCallback, consumerTag -> {
-			});
-
+				Thread.sleep(5000);
+				isMarketOpen = util.isMarketOpen();
+			}
 		} catch (Exception e) {
 			Util.Logger.log(1, e.getMessage());
 			e.printStackTrace();
@@ -287,7 +286,7 @@ public class CandleTrendWorker implements Runnable {
 
 		int n = 0;
 		
-		for(int i = 0; i < ticks2.size(); i=i+n)
+		for(int i = ticks2.size()-1; i > 0 ; i=i-n)
 		{
 			ArrayList<Tick> ticksSubset = new ArrayList<Tick>();
 			n=0;
@@ -296,14 +295,17 @@ public class CandleTrendWorker implements Runnable {
 			
 			LocalDateTime startTime = endTime.minusSeconds(60);
 			
-			for(int j = i; j < ticks2.size();j++)
+			for(int j = i; j > 0 ;j--)
 			{
-				n++;
 				Tick tick = ticks2.get(j);
 				LocalDateTime instTime = Instant.ofEpochMilli(tick.getTickTimestamp().getTime()).atZone( zone.toZoneId() ).toLocalDateTime();
-				if(instTime.isAfter(endTime))
+				if(instTime.isBefore(startTime))
 				{
 					break;
+				}
+				else
+				{
+					n++;
 				}
 				ticksSubset.add(tick);
 			}
@@ -313,7 +315,7 @@ public class CandleTrendWorker implements Runnable {
 				historicalData.add(candle);				
 			}
 		}
-		Collections.sort(historicalData, new CandleComparatorAsc());
+		//Collections.sort(historicalData, new CandleComparatorAsc());
 		return historicalData;
 	}
 	private double is_BUY_HA_GoAhead(ArrayList<HistoricalDataEx> candles) 
@@ -449,26 +451,29 @@ public class CandleTrendWorker implements Runnable {
 			int j = i;
 
 			double open = candles1Min.get(j).open;
-			//String timeStamp = candles1Min.get(j).timeStamp;
+			
+			HistoricalDataEx currCandle = new HistoricalDataEx();
+			
 			for (; j < i + min && j < candles1Min.size(); j++) {
-				HistoricalDataEx candle = candles1Min.get(j);
-				if (candle.high > high) {
-					high = candle.high;
+				currCandle = candles1Min.get(j);
+				if (currCandle.high > high) {
+					high = currCandle.high;
 				}
-				if (candle.low < low) {
-					low = candle.low;
+				if (currCandle.low < low) {
+					low = currCandle.low;
 				}
-				volSum = volSum + candle.volume;
+				volSum = volSum + currCandle.volume;
 			}
-
-			double close = candles1Min.get(candles1Min.size()-1).close;
+			
+			
+			double close = currCandle.close;
 			HistoricalDataEx candle = new HistoricalDataEx();
 			candle.open = open;
 			candle.low = low;
 			candle.high = high;
 			candle.volume = volSum;
 			candle.close = close;
-			candle.timeStamp = candles1Min.get(candles1Min.size()-1).timeStamp;
+			candle.timeStamp = currCandle.timeStamp;
 			candlesXMin.add(candle);
 		}
 		return candlesXMin;

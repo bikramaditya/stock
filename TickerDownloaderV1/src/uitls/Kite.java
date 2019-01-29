@@ -165,7 +165,11 @@ public class Kite
                  * */
                 tickerProvider.subscribe(tokens);
                 tickerProvider.setMode(tokens, KiteTicker.modeFull);
-                System.out.println("Socket connected");
+                System.out.println("Listening to ");
+                for(Long token : tokens)
+                {
+                	System.out.print(token+", ");
+                }
             }
         });
 
@@ -205,27 +209,31 @@ public class Kite
                 	Thread t = new Thread(new TickerWorker(ticks));
 				    t.start();
                 }
-                if(false)
+                else
                 {
-                	ArrayList<Tick> ticks1 = new ArrayList<Tick>();
-                	Tick tick = new Tick();
-                	tick.setLastTradedPrice(0);
-                	tick.setInstrumentToken(1);
-                	tick.setLastTradedTime(new Date());
-                	tick.setTickTimestamp(new Date());
-                	
-                	ticks.add(tick);
-                	
-                	Thread t = new Thread(new TickerWorker(ticks1));
-				    t.start();
-				    try {
-						Thread.sleep(5000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				    System.exit(0);
+                	System.out.println("ticks size = "+ticks.size());
                 }
+//                if(false)
+//                {
+//                	ArrayList<Tick> ticks1 = new ArrayList<Tick>();
+//                	Tick tick = new Tick();
+//                	tick.setLastTradedPrice(0);
+//                	tick.setInstrumentToken(1);
+//                	tick.setLastTradedTime(new Date());
+//                	tick.setTickTimestamp(new Date());
+//                	
+//                	ticks.add(tick);
+//                	
+//                	Thread t = new Thread(new TickerWorker(ticks1));
+//				    t.start();
+//				    try {
+//						Thread.sleep(5000);
+//					} catch (InterruptedException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//				    System.exit(0);
+//                }
             }
         });
         // Make sure this is called before calling connect.

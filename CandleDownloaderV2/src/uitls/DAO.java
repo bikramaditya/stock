@@ -40,11 +40,11 @@ public class DAO
 			pool.setUsername("root");
 			pool.setPassword("root");
 			pool.setUrl("jdbc:mysql://localhost/stock1");
-			pool.setInitialSize(6);
-			pool.setMinIdle(6);
-			pool.setMaxIdle(20);
+			pool.setInitialSize(30);
+			pool.setMinIdle(30);
+			pool.setMaxIdle(40);
 			pool.setMaxOpenPreparedStatements(180);
-			pool.setMaxTotal(20);
+			pool.setMaxTotal(50);
 		}
 	}
 

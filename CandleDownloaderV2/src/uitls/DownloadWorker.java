@@ -12,13 +12,11 @@ public class DownloadWorker implements Runnable{
 	private Stock stock;
 	private Date to;
 	private Kite kite;
-	Channel channel;
 	
-	public DownloadWorker(Channel channel,Kite kite, Stock stock, Date to) {
+	public DownloadWorker(Kite kite, Stock stock, Date to) {
 		this.kite = kite;
 		this.stock = stock;
 		this.to = to;
-		this.channel = channel;
 	}
 	
 	public void run() {
@@ -34,27 +32,22 @@ public class DownloadWorker implements Runnable{
 
 	private void processCommand() {
 		try {
-			String Q = stock.MKT+"-"+stock.SYMBOL;
-			channel.queueDeclare(Q, false, false, false, null);
-			channel.queuePurge (Q);
-			
 			DAO dao = new DAO();
 			System.out.println("");
 			Date lastTimeStamp = dao.getLastCandleTimeStamp(stock);
+			Util.Logger.log(0,"before dw"+stock);
 			HistoricalData historicalData = kite.getHistoricalData(lastTimeStamp,to,stock);
 			
-			if(historicalData.dataArrayList.size() > 0)
+			if(historicalData!=null && historicalData.dataArrayList!=null && historicalData.dataArrayList.size() > 0)
 			{
+				Util.Logger.log(0,"after dw-"+stock+" size="+historicalData.dataArrayList.size());
+				
 				dao.insertToCandleTable(stock,historicalData.dataArrayList);
 				int n = dao.updateFreshDataArrived(stock);
-				if(n>0)
-				{
-					String message = stock.SYMBOL+"Data Arrieved";
-					channel.basicPublish("", Q, null, message.getBytes());	
-				}
 			}
 
 			System.out.println("");
+			
 		} catch (Exception | KiteException e) {
 			e.printStackTrace();
 			Util.Logger.log(1,e.getMessage());

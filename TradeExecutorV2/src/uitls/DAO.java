@@ -18,6 +18,7 @@ import java.util.Set;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.dbcp2.BasicDataSource;
 
+import com.zerodhatech.models.HistoricalData;
 import com.zerodhatech.models.Order;
 
 import entity.Opportunity;
@@ -523,5 +524,32 @@ public class DAO
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public HistoricalData getLastCandle(Opportunity opty) {
+
+		HistoricalData candle = new HistoricalData();
+
+		String query = "select * FROM stock1.stock_candle_data_1min where symbol='"+opty.Symbol+"' and MKT='"+opty.MKT+"' and timestamp=(SELECT max(timestamp) FROM stock1.stock_candle_data_1min where symbol='"+opty.Symbol+"' and MKT='"+opty.MKT+"' )";
+		Connection conn = getConnection();
+		try {
+			Statement st = conn.createStatement();
+			ResultSet rs = st.executeQuery(query);
+
+			while (rs.next()) {
+				candle.open = rs.getDouble("OPEN");
+				candle.high = rs.getDouble("HIGH");
+				candle.low = rs.getDouble("LOW");
+				candle.close = rs.getDouble("CLOSE");
+				candle.volume = rs.getLong("VOLUME");
+			}
+			
+			st.close();
+			releaseConnection(conn);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return candle;
 	}
 }

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
-<fullyQualifiedTypeName name="entity.Opportunity"/>
-<fullyQualifiedTypeName name="entity.HistoricalDataEx"/>
-<fullyQualifiedTypeName name="entity.HeikinAshi"/>
 <fullyQualifiedTypeName name="java.lang.Math"/>
 <fullyQualifiedTypeName name="com.google.gson.JsonObject"/>
 <fullyQualifiedTypeName name="com.google.gson.JsonParser"/>
@@ -21,7 +18,6 @@
 <fullyQualifiedTypeName name="java.lang.System"/>
 <fullyQualifiedTypeName name="java.util.Date"/>
 <fullyQualifiedTypeName name="java.util.concurrent.ConcurrentHashMap"/>
-<fullyQualifiedTypeName name="entity.TradeType"/>
 <fullyQualifiedTypeName name="java.beans.XMLEncoder"/>
 <fullyQualifiedTypeName name="java.io.FileOutputStream"/>
 <fullyQualifiedTypeName name="java.io.BufferedOutputStream"/>
@@ -60,4 +56,8 @@
 <fullyQualifiedTypeName name="java.sql.Date"/>
 <fullyQualifiedTypeName name="java.util.Collections"/>
 <fullyQualifiedTypeName name="java.time.Instant"/>
+<fullyQualifiedTypeName name="entity.HistoricalDataEx"/>
+<fullyQualifiedTypeName name="com.zerodhatech.models.HistoricalData"/>
+<fullyQualifiedTypeName name="entity.TradeType"/>
+<fullyQualifiedTypeName name="java.util.Random"/>
 </qualifiedTypeNameHistroy>

@@ -6,12 +6,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import com.zerodhatech.models.Instrument;
 import entity.Stock;
 import uitls.DAO;
@@ -23,6 +17,7 @@ public class CandleDownloaderV2 {
 	static DAO dao = null;
 	static Util util = null;
 	static final long ONE_MINUTE_IN_MILLIS=60000;// milli seconds
+	//static ArrayList<Thread> threads = new ArrayList<Thread>();
 	
 	public static void main(String[] args) throws InterruptedException {
 		util = new Util();
@@ -32,8 +27,8 @@ public class CandleDownloaderV2 {
 		String today = util.getTodayYYMMDD();
 		boolean isTradingDay = util.isTradingDay(today);
 		boolean isMarketOpen = util.isMarketOpen();
-
-		if (isTradingDay)
+		
+		if (isTradingDay && isMarketOpen)
 		{
 			try 
 			{
@@ -42,40 +37,23 @@ public class CandleDownloaderV2 {
 				
 				Kite kite = new Kite();
 				
-		    	ConnectionFactory factory = new ConnectionFactory();
-		    	factory.setHost("localhost");
-		    	Connection connection = factory.newConnection();
-		    	Channel channel = connection.createChannel();
+				System.out.println("Starting new dw ");
+		        Util.Logger.log(0, "Starting new dw ");
+		        
+				Calendar date = Calendar.getInstance();
+				long t= date.getTimeInMillis();			
+				Date to = new Date(t);
 				
-				while(isMarketOpen)
-				{
-					int secs = LocalDateTime.now().getSecond();
-					
-					if(secs <= 2)
-					{
-						ExecutorService executor = Executors.newFixedThreadPool(2);
-
-						Calendar date = Calendar.getInstance();
-						long t= date.getTimeInMillis();			
-						Date to = new Date(t);
-						
-						for (Stock stock : watchList) {
-							//if(stock.SYMBOL.equals("ADANIPORTS"))
-							{
-								Runnable worker = new DownloadWorker(channel,kite,stock,to);
-					            executor.execute(worker);
-					            Thread.sleep(450);	
-							}
-						}
-						
-						executor.shutdown();
-				        while (!executor.isTerminated()) {
-				        	Thread.sleep(100);
-				        }
-					}
-					isMarketOpen = util.isMarketOpen();
-					Thread.sleep(1000);
+				for (Stock stock : watchList) {
+					Runnable worker = new DownloadWorker(kite,stock,to);
+		            
+					Thread thread = new Thread(worker);
+					thread.start();
+		            Thread.sleep(501);
 				}
+				Thread.sleep(2000);
+				System.out.println("End new dw ");
+		        Util.Logger.log(0, "End new dw ");
 			}
 			catch(Exception e)
 			{
@@ -83,11 +61,19 @@ public class CandleDownloaderV2 {
 		        Util.Logger.log(1, e.getMessage());
 			}
 			
-			System.out.println("Day Over"+new Date());
-	        Util.Logger.log(0, "Day Over"+new Date());
+			System.out.println("Complete dw"+new Date());
+	        Util.Logger.log(0, "Complete dw"+new Date());
 	        System.exit(0);
 		}
 	}
+//
+//	private static void killThreads() 
+//	{
+//		for(Thread thread : threads)
+//		{
+//			//((Object) thread).getDispatcher().getExecutor().shutdown();
+//		}
+//	}
 
 	@SuppressWarnings("unused")
 	private static void storeInstrumentCodes(String[] stockList, Kite kite) 

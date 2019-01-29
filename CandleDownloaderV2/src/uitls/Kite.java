@@ -103,7 +103,6 @@ public class Kite
 	
 	public HistoricalData getHistoricalData(Date from , Date to, Stock stock ) throws KiteException, Exception {
         HistoricalData historicalData = kiteConnect.getHistoricalData(from, to, stock.instrument_token, "minute", false);
-        System.out.println(historicalData.dataArrayList.size());
         
         return historicalData;
     }

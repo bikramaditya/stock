@@ -2,12 +2,7 @@ package action;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 
 import entity.Stock;
 import uitls.DAO;
@@ -44,11 +39,6 @@ public class TrendFollowerV3 {
 		
 		Kite kite = new Kite();
 		
-		ConnectionFactory factory = new ConnectionFactory();
-    	factory.setHost("localhost");
-    	Connection connection = factory.newConnection();
-    	Channel channel = connection.createChannel();
-		
     	ArrayList<Stock> watchList = dao.getWatchList();
     	
 		if (isTradingDay && isMarketOpen)
@@ -59,8 +49,10 @@ public class TrendFollowerV3 {
 			if(watchList.size() > 0)
 			{
 				for (Stock stock : watchList) {
-					Runnable worker = new CandleTrendWorker(channel,stock,kite);
-					worker.run();
+					Runnable worker = new CandleTrendWorker(stock,kite);
+					Thread thread = new Thread(worker);
+					thread.start();
+					Thread.sleep(1000);
 				}							
 			}			
 		}

@@ -1,16 +1,11 @@
 package action;
 
-import java.io.IOException;
-import java.util.Map;
-
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.kiteconnect.utils.Constants;
+import com.zerodhatech.models.HistoricalData;
 import com.zerodhatech.models.Order;
 import com.zerodhatech.models.OrderParams;
-import com.zerodhatech.models.Quote;
-
 import entity.Opportunity;
-import entity.TradeType;
 import uitls.DAO;
 import uitls.Kite;
 import uitls.Util;
@@ -32,6 +27,12 @@ public class OrderWorker implements Runnable {
 		Order order = null;
 		DAO dao = new DAO();
 		try {
+			order = new Order();
+			order.averagePrice="0.0";
+			order.orderId="0";
+			
+			dao.updateOptyPicked(opty,order);	
+			
 			double avlCash = kite.getMargins();
 
 			if (avlCash < sliceCashToday) {
@@ -48,7 +49,7 @@ public class OrderWorker implements Runnable {
 			double price = 0.0;
 			if (("BUY").equals(opty.TradeType)) 
 			{				
-				price = opty.EntryPrice * (1-0.0001);
+				price = opty.EntryPrice;
 				price = round(price, 2);
 				price = Math.round(price * 20) / 20.0;
 				orderParams.price = price;
@@ -56,7 +57,7 @@ public class OrderWorker implements Runnable {
 				orderParams.transactionType = Constants.TRANSACTION_TYPE_BUY;
 			} else if (("SELL").equals(opty.TradeType)) 
 			{				
-				price = opty.EntryPrice * (1 + 0.0001);
+				price = opty.EntryPrice;
 
 				price = round(price, 2);
 				price = Math.round(price * 20) / 20.0;
@@ -66,14 +67,15 @@ public class OrderWorker implements Runnable {
 			}
 			orderParams.tradingsymbol = opty.Symbol;
 			orderParams.trailingStoploss = 0.0;
-			orderParams.stoploss = 0.002 * opty.EntryPrice;
+			orderParams.stoploss = 0.03 * opty.EntryPrice;
 			orderParams.product = Constants.PRODUCT_MIS;
 			orderParams.exchange = Constants.EXCHANGE_NSE;
 			orderParams.validity = Constants.VALIDITY_DAY;
 
-			orderParams.squareoff = 0.0015 * opty.EntryPrice;
+			orderParams.squareoff = 0.0025 * opty.EntryPrice;
 
 			order = kite.placeOrder(orderParams, Constants.VARIETY_BO);
+			
 			if(order.averagePrice==null || order.averagePrice.length()==0)
 			{
 				order.averagePrice = ""+price;
@@ -85,6 +87,19 @@ public class OrderWorker implements Runnable {
 			
 		} catch (Exception | KiteException e) {
 			e.printStackTrace();
+			try {
+				if(order==null)
+				{
+					order = new Order();
+					order.averagePrice="0.0";
+					order.orderId="0";
+				}
+				
+				dao.updateOptyPicked(opty,order);	
+			}
+			catch(Exception ex) {
+				Util.Logger.log(0, ex.getMessage());
+			}
 			Util.Logger.log(0, e.getMessage());
 		}
 
@@ -101,15 +116,26 @@ public class OrderWorker implements Runnable {
 		return (double) tmp / factor;
 	}
 
-	private Opportunity updateOptyQuote(Opportunity opty) {
-		String instrument = opty.MKT + ":" + opty.Symbol;
-		String[] arr = new String[1];
-		arr[0] = instrument;
-		Map<String, Quote> quotes = kite.getAllQuotes(arr);
-		double lastPrice = quotes.get(instrument).lastPrice;
-
-		opty.EntryPrice = lastPrice;
-
+	private Opportunity updateOptyQuote(Opportunity opty) 
+	{
+		DAO dao = new DAO();
+		
+		HistoricalData candle =  dao.getLastCandle(opty);
+		
+		double price = 0.0;
+		double height = Math.abs(candle.close-candle.open);
+		
+		double delta = height*0.3;
+		
+		if(opty.TradeType.equals("BUY"))
+		{
+			price = candle.close-delta;	
+		}
+		else if(opty.TradeType.equals("SELL"))
+		{
+			price = candle.close+delta;
+		}
+		opty.EntryPrice = price;
 		return opty;
 	}
 }

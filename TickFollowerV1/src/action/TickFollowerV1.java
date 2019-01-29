@@ -49,14 +49,14 @@ public class TickFollowerV1 {
     	
 		if (isTradingDay && isMarketOpen)
 		{	
-			System.out.println("scanning new toppers - "+new Date());
-	        Util.Logger.log(0, "scanning new toppers - "+new Date());
+			System.out.println("starting followers - "+new Date());
+	        Util.Logger.log(0, "starting followers - "+new Date());
 	     
 			if(watchList.size() > 0)
 			{
 				for (Stock stock : watchList) {
-					Runnable worker = new CandleTrendWorker(channel,stock,kite);
-					worker.run();
+					Thread worker = new Thread(new CandleTrendWorker(channel,stock,kite));
+					worker.start();
 					break;
 				}							
 			}			

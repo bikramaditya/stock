@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
@@ -44,14 +45,13 @@ public class CandleTrendWorker implements Runnable {
 	private DAO dao = null;
 	private Util util = null;
 	float upDown = 0f;
-	Channel channel;
+
 	private static ConcurrentHashMap<String,TradeType> sessionMap;
 	private static String sessionXML = "";
 	
-	public CandleTrendWorker(Channel channel, Stock stock, Kite kite) throws Exception {
+	public CandleTrendWorker(Stock stock, Kite kite) throws Exception {
 		this.stock = stock;
 		this.util = new Util();
-		this.channel = channel;
 		
 		String user_home = System.getProperty("user.home");
 		String today = util.getTodayYYMMDD();
@@ -105,7 +105,7 @@ public class CandleTrendWorker implements Runnable {
 
 		Util.Logger.log(0, message);
 		System.out.println(message);
-
+		Date lastProcessedCandleTS = null;
 		dao = new DAO();
 
 		try {
@@ -113,184 +113,175 @@ public class CandleTrendWorker implements Runnable {
 			
 			sessionMap.putIfAbsent(Q, TradeType.NONE);
 			
-			channel.queueDeclare(Q, false, false, false, null);
-			System.out.println(Q + "Waiting for messages.");
+			System.out.println(Q + "Waiting for candle data to arrive.");
+			
 			writeSerializedXML();
 			
-			DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-				String msg = new String(delivery.getBody(), "UTF-8");
-				if (msg != null && msg.equals(stock.SYMBOL + "Data Arrieved")) 
+			boolean isMarketOpen = util.isMarketOpen();
+			
+			Random r = new Random();
+			
+			while (isMarketOpen) 
+			{
+				Date lastCandleTS = dao.getLastCandleTimeStamp(stock);
+				
+				if(lastProcessedCandleTS==null || lastProcessedCandleTS.equals(lastCandleTS))
 				{
-					/*
-					//Is last BO order executed completely
-					
-					boolean UnexecutedTradeExists = dao.CheckIfUnexecutedTradeExists(stock);
-					
-					if(UnexecutedTradeExists)
-					{
-						Util.Logger.log(0, "Unexecuted trade exists, skipping it");
-						System.out.println("Unexecuted trade exists, skipping it");
-						return;
-					}
-
-					//Is last BO order executed completely*/
-					
-					System.out.println(" Received '" + msg + "'");
-					//ArrayList<HistoricalDataEx> historicalData = dao.getHistoricalData(stock);// 1 Min
-					
-					//for(int i = 375 ; i > 0; i--)
-					{
-						//ArrayList<HistoricalDataEx> historicalData1min = new ArrayList<HistoricalDataEx>(historicalData.subList(i, historicalData.size()-1));
-						ArrayList<HistoricalDataEx> historicalData1min = dao.getHistoricalData(stock);// 1 Min
-						int n = historicalData1min.size()-1;	
-						Collections.sort(historicalData1min, new CandleComparatorAsc());
-						
-						ArrayList<HistoricalDataEx> historicalData10min = getHistoricalDataXMin(historicalData1min, 10);// 15													// Min
-						ArrayList<HistoricalDataEx> historicalData5min = getHistoricalDataXMin(historicalData1min, 5);// 5Min
-						ArrayList<HistoricalDataEx> historicalData3min = getHistoricalDataXMin(historicalData1min, 3);// 3Min
-
-						String today = util.getTodayYYMMDD();
-						String timestamp = historicalData1min.get(n).timeStamp;
-						
-						
-						if(timestamp.contains(today) && util.isTradeAllowed())//
-						{
-							double[] sign10Min = GetMACD(historicalData10min);
-							double[] sign5Min = GetMACD(historicalData5min);
-							double[] sign3Min = GetMACD(historicalData3min);
-							double[] sign1Min = GetMACD(historicalData1min);
-							
-							Util.Logger.log(0,"MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign10Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
-							System.out.println("MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign10Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
-
-							Util.Logger.log(0,"Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign10Min="+sign10Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
-							System.out.println("Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign10Min="+sign10Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
-							
-							
-							if(sign10Min[0]>0.0 && sign5Min[0]>0.0 && sign3Min[0]>0.0 && sign1Min[0]>0.0
-									&& 
-									sign10Min[1]>-0.02 && sign5Min[1]>-0.02 && sign3Min[1]>0.0 && sign1Min[1]>0.0)
-							{
-								if(Math.abs(sign10Min[0])>0.0001 && Math.abs(sign5Min[0])>0.0001 && Math.abs(sign3Min[0])>0.0001 && Math.abs(sign1Min[0])>0.0001 
-										&& 
-								   Math.abs(sign10Min[1])>0.0001 && Math.abs(sign5Min[1])>0.0001 && Math.abs(sign3Min[1])>0.0001 && Math.abs(sign1Min[1])>0.0001)
-								{
-									double is_buy_10Min = is_BUY_HA_GoAhead(historicalData10min);
-									double is_buy_5Min = is_BUY_HA_GoAhead(historicalData5min);
-									double is_buy_3Min = is_BUY_HA_GoAhead(historicalData3min);
-									double is_buy = is_BUY_HA_GoAhead(historicalData1min);
-									
-									double totalHA = is_buy_10Min+is_buy_5Min+is_buy_3Min+is_buy;
-
-									//if(totalHA > 0.2)// && is_buy_15Min> 0.04 && is_buy_5Min> 0.04 && is_buy_3Min> 0.04 && is_buy> 0.04)
-									{
-										TradeType trade_type = sessionMap.get(Q);
-										
-										if(trade_type==TradeType.BUY)
-										{
-											Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
-											System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
-										}
-										else
-										{
-
-											sessionMap.put(Q, TradeType.BUY);	
-											writeSerializedXML();
-											Opportunity opty = new Opportunity();
-											opty.MA = sign10Min[0];
-											opty.MOM = sign5Min[0];
-											opty.MACD = sign3Min[0];
-											opty.PVT = sign1Min[0];
-											
-											opty.Score = totalHA;
-											opty.MKT = "NSE";
-											opty.Symbol = stock.SYMBOL;
-											opty.TradeType = TradeType.BUY;
-											opty.TimeStamp = historicalData1min.get(n).timeStamp;
-											
-											opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
-											opty.ExitPrice = opty.EntryPrice * (1 + 0.003);
-											opty.StopLoss = opty.EntryPrice * (1 - 0.006);
-
-											opty.is_valid = true;
-
-											System.out.println(opty);
-											util.Logger.log(0, opty.toString());
-											
-											storeOpportunity(opty);
-										}
-									}
-								}
-								
-							}
-							else if(sign10Min[0]<0.0 && sign5Min[0]<0.0 && sign3Min[0]<0.0 && sign1Min[0]<0.0
-									&& 
-									sign10Min[1]<0.02 && sign5Min[1]<0.02 && sign3Min[1]<0.0 && sign1Min[1]<0.0)
-							{
-								if(Math.abs(sign10Min[0])>0.0001 && Math.abs(sign5Min[0])>0.0001 && Math.abs(sign3Min[0])>0.0001 && Math.abs(sign1Min[0])>0.0001 
-										&& 
-								   Math.abs(sign10Min[1])>0.0001 && Math.abs(sign5Min[1])>0.0001 && Math.abs(sign3Min[1])>0.0001 && Math.abs(sign1Min[1])>0.0001)
-								{
-									double is_sell_15Min = is_SELL_HA_GoAhead(historicalData10min);
-									double is_sell_5Min = is_SELL_HA_GoAhead(historicalData5min);
-									double is_sell_3Min = is_SELL_HA_GoAhead(historicalData3min);
-									double is_sell = is_SELL_HA_GoAhead(historicalData1min);
-									
-									double totalHA = is_sell_15Min+is_sell_5Min+is_sell_3Min+is_sell;
-
-									//if(totalHA > 0.2)// && is_sell_15Min > 0.04 && is_sell_5Min > 0.04 && is_sell_3Min > 0.04 && is_sell > 0.04)
-									{
-										TradeType trade_type = sessionMap.get(Q);
-										
-										if(trade_type==TradeType.SELL)
-										{
-											Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
-											System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
-										}
-										else
-										{
-											sessionMap.put(Q, TradeType.SELL);	
-											writeSerializedXML();
-											
-											Opportunity opty = new Opportunity();
-											opty.MA = sign10Min[0];
-											opty.MOM = sign5Min[0];
-											opty.MACD = sign3Min[0];
-											opty.PVT = sign1Min[0];
-
-											opty.Score = totalHA;
-											opty.MKT = "NSE";
-											opty.Symbol = stock.SYMBOL;
-											opty.TradeType = TradeType.SELL;
-											opty.TimeStamp = historicalData1min.get(n).timeStamp;
-
-											opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
-											opty.ExitPrice = opty.EntryPrice * (1 - 0.003);
-											opty.StopLoss = opty.EntryPrice * (1 + 0.006);
-
-											opty.is_valid = true;
-											
-											System.out.println(opty);
-											util.Logger.log(0, opty.toString());
-											
-											storeOpportunity(opty);	
-										}
-									}
-								}										
-							}
-
-						
-						}
-						else
-						{
-							Util.Logger.log(0, "Trade not allowed or Old data received");
-							System.out.println("= Trade not allowed or Old data received");
-						}
-					}
+					lastProcessedCandleTS = lastCandleTS;
+					Thread.sleep(1000+r.nextInt(3000));
+					continue;
 				}
-			};
-			channel.basicConsume(Q, true, deliverCallback, consumerTag -> {
-			});
+				else
+				{
+					lastProcessedCandleTS = lastCandleTS;
+				}
+				ArrayList<HistoricalDataEx> historicalData1min = dao.getHistoricalData(stock);// 1 Min
+				int n = historicalData1min.size()-1;	
+				Collections.sort(historicalData1min, new CandleComparatorAsc());
+				
+				ArrayList<HistoricalDataEx> historicalData10min = getHistoricalDataXMin(historicalData1min, 10);// 15													// Min
+				ArrayList<HistoricalDataEx> historicalData5min = getHistoricalDataXMin(historicalData1min, 5);// 5Min
+				ArrayList<HistoricalDataEx> historicalData3min = getHistoricalDataXMin(historicalData1min, 3);// 3Min
+
+				String today = util.getTodayYYMMDD();
+				String timestamp = historicalData1min.get(n).timeStamp;
+				
+				if(timestamp.contains(today) && util.isTradeAllowed())//
+				{
+					double[] sign10Min = GetMACD(historicalData10min);
+					double[] sign5Min = GetMACD(historicalData5min);
+					double[] sign3Min = GetMACD(historicalData3min);
+					double[] sign1Min = GetMACD(historicalData1min);
+					
+					Util.Logger.log(0,"MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign10Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
+					System.out.println("MACD-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" macd15Min="+sign10Min[0]+" macd5Min="+sign5Min[0]+" macd3Min="+sign3Min[0]+" macd1Min="+sign1Min[0]);
+
+					Util.Logger.log(0,"Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign10Min="+sign10Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
+					System.out.println("Signal-"+ historicalData1min.get(n).timeStamp+"-"+stock.SYMBOL+"-"+" sign10Min="+sign10Min[1]+" sign5Min="+sign5Min[1]+" sign3Min="+sign3Min[1]+" sign1Min="+sign1Min[1]);
+					
+					if(sign10Min[0]>0.0 && sign5Min[0]>0.0 && sign3Min[0]>0.0 && sign1Min[0]>0.0
+							&& 
+							sign10Min[1]>-0.02 && sign5Min[1]>-0.02 && sign3Min[1]>0.0 && sign1Min[1]>0.0)
+					{
+						if(Math.abs(sign10Min[0])>0.0001 && Math.abs(sign5Min[0])>0.0001 && Math.abs(sign3Min[0])>0.0001 && Math.abs(sign1Min[0])>0.0001 
+								&& 
+						   Math.abs(sign10Min[1])>0.0001 && Math.abs(sign5Min[1])>0.0001 && Math.abs(sign3Min[1])>0.0001 && Math.abs(sign1Min[1])>0.0001)
+						{
+							double is_buy_10Min = is_BUY_HA_GoAhead(historicalData10min);
+							double is_buy_5Min = is_BUY_HA_GoAhead(historicalData5min);
+							double is_buy_3Min = is_BUY_HA_GoAhead(historicalData3min);
+							double is_buy = is_BUY_HA_GoAhead(historicalData1min);
+							
+							double totalHA = is_buy_10Min+is_buy_5Min+is_buy_3Min+is_buy;
+
+							//if(totalHA > 0.2)// && is_buy_15Min> 0.04 && is_buy_5Min> 0.04 && is_buy_3Min> 0.04 && is_buy> 0.04)
+							{
+								TradeType trade_type = sessionMap.get(Q);
+								
+								if(trade_type==TradeType.BUY)
+								{
+									Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
+									System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
+								}
+								else
+								{
+
+									sessionMap.put(Q, TradeType.BUY);	
+									writeSerializedXML();
+									Opportunity opty = new Opportunity();
+									opty.MA = sign10Min[0];
+									opty.MOM = sign5Min[0];
+									opty.MACD = sign3Min[0];
+									opty.PVT = sign1Min[0];
+									
+									opty.Score = totalHA;
+									opty.MKT = "NSE";
+									opty.Symbol = stock.SYMBOL;
+									opty.TradeType = TradeType.BUY;
+									opty.TimeStamp = historicalData1min.get(n).timeStamp;
+									
+									opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
+									opty.ExitPrice = opty.EntryPrice * (1 + 0.003);
+									opty.StopLoss = opty.EntryPrice * (1 - 0.006);
+
+									opty.is_valid = true;
+
+									System.out.println(opty);
+									util.Logger.log(0, opty.toString());
+									
+									storeOpportunity(opty);
+								}
+							}
+						}
+						
+					}
+					else if(sign10Min[0]<0.0 && sign5Min[0]<0.0 && sign3Min[0]<0.0 && sign1Min[0]<0.0
+							&& 
+							sign10Min[1]<0.02 && sign5Min[1]<0.02 && sign3Min[1]<0.0 && sign1Min[1]<0.0)
+					{
+						if(Math.abs(sign10Min[0])>0.0001 && Math.abs(sign5Min[0])>0.0001 && Math.abs(sign3Min[0])>0.0001 && Math.abs(sign1Min[0])>0.0001 
+								&& 
+						   Math.abs(sign10Min[1])>0.0001 && Math.abs(sign5Min[1])>0.0001 && Math.abs(sign3Min[1])>0.0001 && Math.abs(sign1Min[1])>0.0001)
+						{
+							double is_sell_15Min = is_SELL_HA_GoAhead(historicalData10min);
+							double is_sell_5Min = is_SELL_HA_GoAhead(historicalData5min);
+							double is_sell_3Min = is_SELL_HA_GoAhead(historicalData3min);
+							double is_sell = is_SELL_HA_GoAhead(historicalData1min);
+							
+							double totalHA = is_sell_15Min+is_sell_5Min+is_sell_3Min+is_sell;
+
+							//if(totalHA > 0.2)// && is_sell_15Min > 0.04 && is_sell_5Min > 0.04 && is_sell_3Min > 0.04 && is_sell > 0.04)
+							{
+								TradeType trade_type = sessionMap.get(Q);
+								
+								if(trade_type==TradeType.SELL)
+								{
+									Util.Logger.log(0, stock.SYMBOL+" Duplicate trade exists, skipping it");
+									System.out.println(stock.SYMBOL+" Duplicate trade exists, skipping it");
+								}
+								else
+								{
+									sessionMap.put(Q, TradeType.SELL);	
+									writeSerializedXML();
+									
+									Opportunity opty = new Opportunity();
+									opty.MA = sign10Min[0];
+									opty.MOM = sign5Min[0];
+									opty.MACD = sign3Min[0];
+									opty.PVT = sign1Min[0];
+
+									opty.Score = totalHA;
+									opty.MKT = "NSE";
+									opty.Symbol = stock.SYMBOL;
+									opty.TradeType = TradeType.SELL;
+									opty.TimeStamp = historicalData1min.get(n).timeStamp;
+
+									opty.EntryPrice = (historicalData1min.get(n).high+historicalData1min.get(n).low)/2;
+									opty.ExitPrice = opty.EntryPrice * (1 - 0.003);
+									opty.StopLoss = opty.EntryPrice * (1 + 0.006);
+
+									opty.is_valid = true;
+									
+									System.out.println(opty);
+									util.Logger.log(0, opty.toString());
+									
+									storeOpportunity(opty);	
+								}
+							}
+						}										
+					}
+
+				
+				}
+				else
+				{
+					Util.Logger.log(0, "Trade not allowed or Old data received");
+					System.out.println("= Trade not allowed or Old data received");
+				}
+				Thread.sleep(1000);
+				isMarketOpen = util.isMarketOpen();
+			}
+		
 
 		} catch (Exception e) {
 			Util.Logger.log(1, e.getMessage());

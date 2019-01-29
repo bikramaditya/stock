@@ -44,11 +44,11 @@ public class DAO
 			pool.setUsername("root");
 			pool.setPassword("root");
 			pool.setUrl("jdbc:mysql://localhost/stock1");
-			pool.setInitialSize(4);
-			pool.setMinIdle(4);
-			pool.setMaxIdle(20);
+			pool.setInitialSize(40);
+			pool.setMinIdle(40);
+			pool.setMaxIdle(40);
 			pool.setMaxOpenPreparedStatements(180);
-			pool.setMaxTotal(10);
+			pool.setMaxTotal(100);
 		}
 	}
 
@@ -584,7 +584,7 @@ public class DAO
 
 	public ArrayList<Tick> getTicks(Stock stock) {
 		ArrayList<Tick> ticks = new ArrayList<Tick>();
-		String query = "select * from(SELECT * FROM stock1.ticks where instrument_token='"+stock.instrument_token+"' order by last_trade_time desc limit 1000) T1 order by last_trade_time asc";
+		String query = "select * from(SELECT * FROM stock1.ticks where instrument_token='"+stock.instrument_token+"' order by last_trade_time desc limit 5000) T1 order by last_trade_time asc";
 		Connection conn = getConnection();
 		try {
 			Statement st = conn.createStatement();

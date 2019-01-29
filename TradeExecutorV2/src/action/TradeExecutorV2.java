@@ -44,17 +44,17 @@ public class TradeExecutorV2 {
 			try {
 				kite = new Kite();
 				double totalCashToday =  kite.getMargins();
-				sliceCashToday = totalCashToday/15;
+				sliceCashToday = totalCashToday/10;
 			} catch (Exception | KiteException e) {
 				e.printStackTrace();
 				Util.Logger.log(1,e.getMessage());
 			}	
 		}
 		
+		dao = new DAO();
+		
 		while (isTradingDay && isMarketOpen && kite != null && sliceCashToday > 0) //Debug
 		{
-			dao = new DAO();
-			
 			//System.out.print("Starting all threads - "+new Date());
 	        Util.Logger.log(0, "Starting all threads - "+new Date());
 	        
@@ -62,7 +62,7 @@ public class TradeExecutorV2 {
 			
 			if(watchList.size() > 0)
 			{
-				ExecutorService executor = Executors.newFixedThreadPool(2);
+				ExecutorService executor = Executors.newFixedThreadPool(5);
 				Runnable worker;
 				for (Opportunity opty : watchList) 
 				{
@@ -81,7 +81,7 @@ public class TradeExecutorV2 {
 	        
 	        isMarketOpen = util.isMarketOpen();
 	        
-	        Thread.sleep(500);
+	        Thread.sleep(1000);
 		}
 		
 		System.out.println("isTradingDay && isMarketOpen "+isTradingDay +"-"+ isMarketOpen);

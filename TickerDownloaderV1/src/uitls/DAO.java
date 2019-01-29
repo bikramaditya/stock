@@ -48,11 +48,11 @@ public class DAO
 			pool.setUsername("root");
 			pool.setPassword("root");
 			pool.setUrl("jdbc:mysql://localhost/stock1");
-			pool.setInitialSize(6);
-			pool.setMinIdle(6);
-			pool.setMaxIdle(20);
+			pool.setInitialSize(40);
+			pool.setMinIdle(40);
+			pool.setMaxIdle(40);
 			pool.setMaxOpenPreparedStatements(180);
-			pool.setMaxTotal(20);
+			pool.setMaxTotal(200);
 			
 	    	try {
 		    	factory = new ConnectionFactory();
@@ -536,7 +536,6 @@ public class DAO
 		}
 		if (statement != null) {
 			for (Tick tick : ticks) {
-
 				try {
 					statement.setTimestamp(1, new java.sql.Timestamp(tick.getTickTimestamp().getTime()));
 					statement.setTimestamp(2, new java.sql.Timestamp(tick.getLastTradedTime().getTime()));
@@ -546,23 +545,8 @@ public class DAO
 					statement.setDouble(6, tick.getLastTradedPrice());
 					statement.setString(7, "" + tick.getInstrumentToken());
 					statement.setString(8, "NSE");
-
-					int n = statement.executeUpdate();
-					if(n>0)
-					{
-						String Q = ""+tick.getInstrumentToken();
-						
-						try {
-							channel.queueDeclare(Q, false, false, false, null);
-							
-							String message = Q+" Data Arrieved";
-							channel.basicPublish("", Q, null, message.getBytes());
-						} 
-						catch (IOException e) 
-						{
-							e.printStackTrace();
-						}
-					}
+					
+					statement.execute();
 				}
 				catch(java.sql.SQLIntegrityConstraintViolationException ex)
 				{
@@ -573,6 +557,6 @@ public class DAO
 				}
 			}
 		}
-
+		releaseConnection(conn);
 	}
 }
