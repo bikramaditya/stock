@@ -270,7 +270,7 @@ public class Util
 		String today = getTodayYYMMDD();
 		
 		if (now.isAfter(LocalDateTime.parse(today + "T09:00:00"))
-				&& now.isBefore(LocalDateTime.parse(today + "T15:10:00")))
+				&& now.isBefore(LocalDateTime.parse(today + "T09:25:00")))
 		{
 			return true;
 		}

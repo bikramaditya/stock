@@ -67,12 +67,12 @@ public class OrderWorker implements Runnable {
 			}
 			orderParams.tradingsymbol = opty.Symbol;
 			orderParams.trailingStoploss = 0.0;
-			orderParams.stoploss = 0.03 * opty.EntryPrice;
+			orderParams.stoploss = 0.006 * opty.EntryPrice;
 			orderParams.product = Constants.PRODUCT_MIS;
 			orderParams.exchange = Constants.EXCHANGE_NSE;
 			orderParams.validity = Constants.VALIDITY_DAY;
 
-			orderParams.squareoff = 0.0025 * opty.EntryPrice;
+			orderParams.squareoff = 0.003 * opty.EntryPrice;
 
 			order = kite.placeOrder(orderParams, Constants.VARIETY_BO);
 			

@@ -49,10 +49,13 @@ public class TrendFollowerV3 {
 			if(watchList.size() > 0)
 			{
 				for (Stock stock : watchList) {
-					Runnable worker = new CandleTrendWorker(stock,kite);
-					Thread thread = new Thread(worker);
-					thread.start();
-					Thread.sleep(1000);
+					//if(stock.SYMBOL.equals("BHARTIARTL"))
+					{
+						Runnable worker = new CandleTrendWorker(stock,kite);
+						Thread thread = new Thread(worker);
+						thread.start();
+						Thread.sleep(1000);	
+					}
 				}							
 			}			
 		}
