@@ -86,5 +86,6 @@ public class TradeExecutorV2 {
 		
 		System.out.println("isTradingDay && isMarketOpen "+isTradingDay +"-"+ isMarketOpen);
         Util.Logger.log(0, "isTradingDay && isMarketOpen "+isTradingDay +"-"+ isMarketOpen);
+        System.exit(0);
 	}
 }

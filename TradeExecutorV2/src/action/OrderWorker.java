@@ -1,5 +1,8 @@
 package action;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.kiteconnect.utils.Constants;
 import com.zerodhatech.models.HistoricalData;
@@ -22,88 +25,92 @@ public class OrderWorker implements Runnable {
 	}
 
 	@Override
-	public void run() 
-	{
+	public void run() {
 		Order order = null;
+		
 		DAO dao = new DAO();
 		try {
+			Util util = new Util();
 			order = new Order();
-			order.averagePrice="0.0";
-			order.orderId="0";
-			
-			dao.updateOptyPicked(opty,order);	
-			
-			double avlCash = kite.getMargins();
+			order.averagePrice = "0.0";
+			order.orderId = "0";
 
-			if (avlCash < sliceCashToday) {
-				System.out.println("Cant execute, insufficient balance " + avlCash + " < " + sliceCashToday);
-				Util.Logger.log(0, "Cant execute, insufficient balance " + avlCash + " < " + sliceCashToday);
-				return;
+			dao.updateOptyPicked(opty, order);
+
+			String today = util.getTodayYYMMDD();
+			LocalDateTime orderTime = LocalDateTime.parse(opty.TimeStamp,DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+			if (orderTime.isAfter(LocalDateTime.parse(today + "T09:16:30"))
+					&& orderTime.isBefore(LocalDateTime.parse(today + "T09:25:00"))) {
+				
+				double avlCash = kite.getMargins();
+
+				if (avlCash < sliceCashToday) {
+					System.out.println("Cant execute, insufficient balance " + avlCash + " < " + sliceCashToday);
+					Util.Logger.log(0, "Cant execute, insufficient balance " + avlCash + " < " + sliceCashToday);
+					return;
+				}
+
+				opty = updateOptyQuote(opty);
+
+				OrderParams orderParams = new OrderParams();
+				orderParams.quantity = 1 + (int) (sliceCashToday / opty.EntryPrice);
+				orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
+				double price = 0.0;
+				if (("BUY").equals(opty.TradeType)) {
+					price = opty.EntryPrice;
+					price = round(price, 2);
+					price = Math.round(price * 20) / 20.0;
+					orderParams.price = price;
+
+					orderParams.transactionType = Constants.TRANSACTION_TYPE_BUY;
+				} else if (("SELL").equals(opty.TradeType)) {
+					price = opty.EntryPrice;
+
+					price = round(price, 2);
+					price = Math.round(price * 20) / 20.0;
+					orderParams.price = price;
+
+					orderParams.transactionType = Constants.TRANSACTION_TYPE_SELL;
+				}
+				orderParams.tradingsymbol = opty.Symbol;
+				orderParams.trailingStoploss = 0.0;
+				orderParams.stoploss = 0.006 * opty.EntryPrice;
+				orderParams.product = Constants.PRODUCT_MIS;
+				orderParams.exchange = Constants.EXCHANGE_NSE;
+				orderParams.validity = Constants.VALIDITY_DAY;
+
+				orderParams.squareoff = 0.003 * opty.EntryPrice;
+
+				order = kite.placeOrder(orderParams, Constants.VARIETY_BO);
+
+				if (order.averagePrice == null || order.averagePrice.length() == 0) {
+					order.averagePrice = "" + price;
+				}
+				System.out.println(opty + "->" + order.orderId);
+				Util.Logger.log(0, opty + "->" + order.orderId);
+
+				dao.updateOptyPicked(opty, order);
 			}
-
-			opty = updateOptyQuote(opty);
-
-			OrderParams orderParams = new OrderParams();
-			orderParams.quantity = 1+(int) (sliceCashToday / opty.EntryPrice);
-			orderParams.orderType = Constants.ORDER_TYPE_LIMIT;
-			double price = 0.0;
-			if (("BUY").equals(opty.TradeType)) 
-			{				
-				price = opty.EntryPrice;
-				price = round(price, 2);
-				price = Math.round(price * 20) / 20.0;
-				orderParams.price = price;
-
-				orderParams.transactionType = Constants.TRANSACTION_TYPE_BUY;
-			} else if (("SELL").equals(opty.TradeType)) 
-			{				
-				price = opty.EntryPrice;
-
-				price = round(price, 2);
-				price = Math.round(price * 20) / 20.0;
-				orderParams.price = price;
-
-				orderParams.transactionType = Constants.TRANSACTION_TYPE_SELL;
-			}
-			orderParams.tradingsymbol = opty.Symbol;
-			orderParams.trailingStoploss = 0.0;
-			orderParams.stoploss = 0.006 * opty.EntryPrice;
-			orderParams.product = Constants.PRODUCT_MIS;
-			orderParams.exchange = Constants.EXCHANGE_NSE;
-			orderParams.validity = Constants.VALIDITY_DAY;
-
-			orderParams.squareoff = 0.003 * opty.EntryPrice;
-
-			order = kite.placeOrder(orderParams, Constants.VARIETY_BO);
-			
-			if(order.averagePrice==null || order.averagePrice.length()==0)
+			else
 			{
-				order.averagePrice = ""+price;
+				Util.Logger.log(0, "order outside allowed time");
 			}
-			System.out.println(opty+"->"+order.orderId);
-			Util.Logger.log(0, opty+"->"+order.orderId);
-			
-			dao.updateOptyPicked(opty,order);
-			
 		} catch (Exception | KiteException e) {
 			e.printStackTrace();
 			try {
-				if(order==null)
-				{
+				if (order == null) {
 					order = new Order();
-					order.averagePrice="0.0";
-					order.orderId="0";
+					order.averagePrice = "0.0";
+					order.orderId = "0";
 				}
-				
-				dao.updateOptyPicked(opty,order);	
-			}
-			catch(Exception ex) {
+
+				dao.updateOptyPicked(opty, order);
+			} catch (Exception ex) {
 				Util.Logger.log(0, ex.getMessage());
 			}
 			Util.Logger.log(0, e.getMessage());
 		}
-
-		//return order;
 	}
 
 	public static double round(double value, int places) {
@@ -116,24 +123,20 @@ public class OrderWorker implements Runnable {
 		return (double) tmp / factor;
 	}
 
-	private Opportunity updateOptyQuote(Opportunity opty) 
-	{
+	private Opportunity updateOptyQuote(Opportunity opty) {
 		DAO dao = new DAO();
-		
-		HistoricalData candle =  dao.getLastCandle(opty);
-		
+
+		HistoricalData candle = dao.getLastCandle(opty);
+
 		double price = 0.0;
-		double height = Math.abs(candle.close-candle.open);
-		
-		double delta = height*0.3;
-		
-		if(opty.TradeType.equals("BUY"))
-		{
-			price = candle.close-delta;	
-		}
-		else if(opty.TradeType.equals("SELL"))
-		{
-			price = candle.close+delta;
+		double height = Math.abs(candle.close - candle.open);
+
+		double delta = height * 0.3;
+
+		if (opty.TradeType.equals("BUY")) {
+			price = candle.close - delta;
+		} else if (opty.TradeType.equals("SELL")) {
+			price = candle.close + delta;
 		}
 		opty.EntryPrice = price;
 		return opty;
